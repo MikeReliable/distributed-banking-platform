@@ -13,13 +13,14 @@ public class ClaimsHeaderFilter implements GlobalFilter {
     @Override
     public Mono<Void> filter(ServerWebExchange exchange, GatewayFilterChain chain) {
         return exchange.getPrincipal()
-                .cast(JwtAuthenticationToken.class)
+                .ofType(JwtAuthenticationToken.class)
                 .map(auth -> {
                     var claims = auth.getToken().getClaims();
                     return exchange.mutate()
                             .request(r -> r
                                     .header("X-User-Id", claims.get("sub").toString())
-                                    .header("X-Role", claims.get("role").toString()))
+                                    .header("X-User-Role", claims.get("role").toString())
+                            )
                             .build();
                 })
                 .defaultIfEmpty(exchange)

@@ -17,6 +17,19 @@ services:
     networks:
       - bank-network
 
+  api-gateway:
+    build:
+      context: .
+      dockerfile: api-gateway/Dockerfile
+    container_name: api-gateway
+    depends_on:
+      auth-service:
+        condition: service_started
+    ports:
+      - "8080:8080"
+    networks:
+      - bank-network
+
   auth-service:
     build:
       context: .
@@ -34,18 +47,17 @@ services:
     networks:
       - bank-network
 
-  api-gateway:
+
+  card-service:
     build:
       context: .
-      dockerfile: api-gateway/Dockerfile
-    container_name: api-gateway
-    depends_on:
-      auth-service:
-        condition: service_started
+      dockerfile: card-service/Dockerfile
+    container_name: card-service
     ports:
-      - "8080:8080"
+      - "8083:8083"
     networks:
       - bank-network
+
 
 networks:
   bank-network:
