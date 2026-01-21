@@ -19,22 +19,31 @@ public class LoggingFilter implements WebFilter {
     @Override
     public @NonNull Mono<Void> filter(@NonNull ServerWebExchange exchange, @NonNull WebFilterChain chain) {
 
-        String method = exchange.getRequest().getMethod().name();
-        String path = exchange.getRequest().getPath().toString();
+        return Mono.deferContextual(ctx -> {
+            String requestId = ctx.getOrDefault(
+                    CorrelationIdFilter.HEADER,
+                    "N/A"
+            );
 
-        var ref = new Object() {
-            String requestId = exchange.getAttribute(CorrelationIdFilter.HEADER);
-        };
-        if (ref.requestId == null) ref.requestId = "N/A";
+            log.info("[requestId={}] Incoming {} {}",
+                    requestId,
+                    exchange.getRequest().getMethod(),
+                    exchange.getRequest().getURI().getPath()
+            );
 
-        log.info("[requestId={}] Incoming {} {}", ref.requestId, method, path);
-
-        return chain.filter(exchange)
-                .doOnSuccess(unused ->
-                        log.info("[requestId={}] Completed {}",
-                                ref.requestId,
-                                exchange.getResponse().getStatusCode()
-                        )
-                );
+            return chain.filter(exchange)
+                    .doOnSuccess(v ->
+                            log.info("Completed {} [requestId={}]",
+                                    exchange.getResponse().getStatusCode(),
+                                    requestId
+                            )
+                    )
+                    .doOnError(e ->
+                            log.error("Failed [requestId={}]: {}",
+                                    requestId,
+                                    e.getMessage()
+                            )
+                    );
+        });
     }
 }

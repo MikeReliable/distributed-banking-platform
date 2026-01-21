@@ -21,9 +21,20 @@ spring:
       httpclient:
         connect-timeout: 3000
         response-timeout: 5s
-
+        pool:
+          max-idle-time: 5000
       default-filters:
         - RemoveRequestHeader=Cookie
+
+      routes:
+        - id: card-service
+          uri: lb://card-service
+          predicates:
+            - Path=/cards/**
+          filters:
+            - StripPrefix=1
+          metadata:
+            preserve-host: true
 
 logging:
   level:

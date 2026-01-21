@@ -19,22 +19,15 @@ public class CorrelationIdFilter implements WebFilter {
     public static final String HEADER = "X-Request-Id";
 
     @Override
-    public @NonNull Mono<Void> filter(@NonNull ServerWebExchange exchange,@NonNull WebFilterChain chain) {
-
-        String requestId = exchange.getRequest()
-                .getHeaders()
-                .getFirst(HEADER);
-
+    public @NonNull Mono<Void> filter(@NonNull ServerWebExchange exchange, @NonNull WebFilterChain chain) {
+        String requestId = exchange.getRequest().getHeaders().getFirst(HEADER);
         if (requestId == null) {
             requestId = UUID.randomUUID().toString();
         }
 
-        ServerHttpRequest request = exchange.getRequest()
-                .mutate()
+        ServerHttpRequest request = exchange.getRequest().mutate()
                 .header(HEADER, requestId)
                 .build();
-
-        exchange.getAttributes().put(HEADER, requestId);
 
         String finalRequestId = requestId;
         return chain.filter(exchange.mutate().request(request).build())
