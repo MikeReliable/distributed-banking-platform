@@ -15,6 +15,7 @@ import java.util.UUID;
 public class CorrelationIdFilter implements Filter {
 
     public static final String HEADER = "X-Request-Id";
+    public static final String MDC_KEY = "requestId";
 
     @Override
     public void doFilter(
@@ -24,14 +25,14 @@ public class CorrelationIdFilter implements Filter {
     ) throws IOException, ServletException {
 
         HttpServletRequest http = (HttpServletRequest) request;
-        String correlationId = http.getHeader(HEADER);
+        String requestId = http.getHeader(HEADER);
 
-        if (correlationId == null) {
-            correlationId = UUID.randomUUID().toString();
+        if (requestId == null) {
+            requestId = UUID.randomUUID().toString();
         }
 
         try {
-            MDC.put(HEADER, correlationId);
+            MDC.put(MDC_KEY, requestId);
             chain.doFilter(request, response);
         } finally {
             MDC.clear();

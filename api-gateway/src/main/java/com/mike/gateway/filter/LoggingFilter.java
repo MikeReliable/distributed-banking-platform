@@ -33,9 +33,9 @@ public class LoggingFilter implements WebFilter {
 
             return chain.filter(exchange)
                     .doOnSuccess(v ->
-                            log.info("Completed {} [requestId={}]",
-                                    exchange.getResponse().getStatusCode(),
-                                    requestId
+                            log.info("[requestId={}] Completed {}",
+                                    requestId,
+                                    exchange.getResponse().getStatusCode()
                             )
                     )
                     .doOnError(e ->
