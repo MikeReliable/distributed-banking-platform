@@ -1,3 +1,8 @@
+import org.gradle.kotlin.dsl.annotationProcessor
+import org.gradle.kotlin.dsl.compileOnly
+import org.gradle.kotlin.dsl.testAnnotationProcessor
+import org.gradle.kotlin.dsl.testCompileOnly
+
 plugins {
     id("org.springframework.boot")
     id("io.spring.dependency-management")
@@ -13,6 +18,12 @@ dependencies {
 
     implementation("org.springframework.boot:spring-boot-starter-webflux")
     implementation("org.springframework.cloud:spring-cloud-starter-gateway")
+
+    compileOnly ("org.projectlombok:lombok:1.18.32")
+    annotationProcessor ("org.projectlombok:lombok:1.18.32")
+
+    testCompileOnly ("org.projectlombok:lombok:1.18.32")
+    testAnnotationProcessor ("org.projectlombok:lombok:1.18.32")
 }
 
 dependencyManagement {
