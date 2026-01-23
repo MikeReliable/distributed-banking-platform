@@ -1,7 +1,7 @@
-package com.mike.card.error;
+package com.mike.transfer.error;
 
-import com.mike.card.common.ApiError;
-import com.mike.card.common.ApiException;
+import com.mike.transfer.common.ApiError;
+import com.mike.transfer.common.ApiException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.ConstraintViolationException;
 import org.slf4j.MDC;
@@ -13,8 +13,8 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 import java.time.Instant;
 
-import static com.mike.card.error.ErrorType.INTERNAL_ERROR;
-import static com.mike.card.error.ErrorType.VALIDATION_ERROR;
+import static com.mike.transfer.error.ErrorType.INTERNAL_ERROR;
+import static com.mike.transfer.error.ErrorType.VALIDATION_ERROR;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
@@ -121,3 +121,4 @@ public class GlobalExceptionHandler {
         return requestId != null ? requestId : "N/A";
     }
 }
+

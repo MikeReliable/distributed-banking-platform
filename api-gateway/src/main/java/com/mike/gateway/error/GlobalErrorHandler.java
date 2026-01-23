@@ -5,16 +5,17 @@ import com.mike.gateway.common.ApiError;
 import org.springframework.boot.web.reactive.error.ErrorWebExceptionHandler;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.HttpStatusCode;
 import org.springframework.http.MediaType;
 import org.springframework.lang.NonNull;
-import org.springframework.web.reactive.function.client.WebClientResponseException;
 import org.springframework.web.server.ServerWebExchange;
 import reactor.core.publisher.Mono;
+
+import java.time.Instant;
 
 @Configuration
 public class GlobalErrorHandler implements ErrorWebExceptionHandler {
 
+    private static final String REQUEST_ID = "X-Request-Id";
     private final ObjectMapper mapper = new ObjectMapper();
 
     @Override
@@ -22,31 +23,16 @@ public class GlobalErrorHandler implements ErrorWebExceptionHandler {
 
         return Mono.deferContextual(ctx -> {
 
-            if (ex instanceof WebClientResponseException wce) {
+            HttpStatus status = HttpStatus.INTERNAL_SERVER_ERROR;
 
-                HttpStatusCode status = wce.getStatusCode();
-
-                exchange.getResponse().setStatusCode(status);
-                exchange.getResponse().getHeaders()
-                        .setContentType(MediaType.APPLICATION_JSON);
-
-                return exchange.getResponse()
-                        .writeWith(Mono.just(
-                                exchange.getResponse()
-                                        .bufferFactory()
-                                        .wrap(wce.getResponseBodyAsByteArray())
-                        ));
-            }
-
-            HttpStatus status = HttpStatus.BAD_GATEWAY;
-
-            ApiError error = GatewayErrorBuilder.build(
+            ApiError error = new ApiError(
                     "GATEWAY_ERROR",
                     "Gateway error",
-                    status,
+                    status.value(),
                     ex.getMessage(),
-                    exchange,
-                    ctx
+                    exchange.getRequest().getPath().value(),
+                    ctx.getOrDefault(REQUEST_ID, "N/A"),
+                    Instant.now()
             );
 
             byte[] bytes;
