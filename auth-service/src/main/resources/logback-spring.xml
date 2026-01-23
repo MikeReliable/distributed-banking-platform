@@ -1,6 +1,9 @@
 <configuration>
+
+    <property name="SERVICE" value="auth-service"/>
+
     <property name="PATTERN"
-              value="%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n"/>
+              value="ts=%d{yyyy-MM-dd'T'HH:mm:ss.SSSX} level=%-5level service=${SERVICE} requestId=%X{requestId:-N/A} logger=%logger{36} msg=%msg%n"/>
 
     <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
         <encoder>
@@ -12,3 +15,4 @@
         <appender-ref ref="STDOUT"/>
     </root>
 </configuration>
+
