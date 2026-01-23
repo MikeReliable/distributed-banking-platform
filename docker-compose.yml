@@ -47,7 +47,6 @@ services:
     networks:
       - bank-network
 
-
   card-service:
     build:
       context: .
@@ -58,6 +57,15 @@ services:
     networks:
       - bank-network
 
+  transfer-service:
+    build:
+      context: .
+      dockerfile: transfer-service/Dockerfile
+    container_name: transfer-service
+    ports:
+      - "8084:8084"
+    networks:
+      - bank-network
 
 networks:
   bank-network:

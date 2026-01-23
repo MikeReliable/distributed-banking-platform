@@ -36,6 +36,15 @@ spring:
           metadata:
             preserve-host: true
 
+        - id: transfer-service
+          uri: lb://transfer-service
+          predicates:
+            - Path=/transfers/**
+          filters:
+            - StripPrefix=1
+          metadata:
+            preserve-host: true
+
 logging:
   level:
     root: INFO
