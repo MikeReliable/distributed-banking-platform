@@ -5,26 +5,34 @@ spring:
   application:
     name: card-service
 
-#  datasource:
-#    url: jdbc:postgresql://postgres-auth:5432/auth
-#    username: auth
-#    password: auth
-#    driver-class-name: org.postgresql.Driver
-#
-#  jpa:
-#    hibernate:
-#      ddl-auto: validate
-#    show-sql: false
-#    open-in-view: false
-#
-#  liquibase:
-#    enabled: true
-#    change-log: classpath:db/changelog/db.changelog-master.yaml
-#
-#  security:
-#    user:
-#      name: disabled
-#      password: disabled
+  datasource:
+    url: jdbc:postgresql://postgres-card:5432/card
+    username: card
+    password: card
+    driver-class-name: org.postgresql.Driver
+
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    show-sql: false
+    open-in-view: false
+
+  liquibase:
+    enabled: true
+    change-log: classpath:db/changelog/db.changelog-master.yaml
+
+  kafka:
+    bootstrap-servers: localhost:9092
+    consumer:
+      group-id: card-service-group
+      auto-offset-reset: earliest
+      key-deserializer: org.springframework.kafka.support.serializer.ErrorHandlingDeserializer
+      value-deserializer: org.springframework.kafka.support.serializer.ErrorHandlingDeserializer
+      properties:
+        spring.deserializer.key.delegate.class: org.apache.kafka.common.serialization.StringDeserializer
+        spring.deserializer.value.delegate.class: org.springframework.kafka.support.serializer.JsonDeserializer
+        spring.json.trusted.packages: "*"
+        spring.json.value.default.type: com.mike.card.event.UserCreatedEvent
 
 logging:
   level:

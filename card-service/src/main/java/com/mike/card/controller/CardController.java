@@ -9,6 +9,7 @@ import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.UUID;
 
 @Validated
 @RestController
@@ -29,7 +30,7 @@ public class CardController {
     }
 
     @GetMapping(path = "/{cardId}")
-    public Card getCardById(@PathVariable @NotBlank String cardId) {
+    public Card getCardById(@PathVariable @NotBlank UUID cardId) {
         return service.getById(cardId);
     }
 }

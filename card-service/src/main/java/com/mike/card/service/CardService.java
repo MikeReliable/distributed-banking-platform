@@ -1,25 +1,42 @@
 package com.mike.card.service;
 
 import com.mike.card.domain.Card;
-import com.mike.card.error.CardNotFoundException;
+import com.mike.card.repository.CardRepository;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.UUID;
 
 @Service
 public class CardService {
 
-    public List<Card> getCardsForUser(String userId) {
-        return List.of(
-                new Card("1", userId, "4111 **** **** 1111", "USD"),
-                new Card("2", userId, "5500 **** **** 2222", "EUR")
-        );
+    private final CardRepository cardRepository;
+
+    public CardService(CardRepository cardRepository) {
+        this.cardRepository = cardRepository;
     }
 
-    public Card getById(String cardId) {
-        return getCardsForUser("someUser").stream()
-                .filter(c -> c.id().equals(cardId))
-                .findFirst()
-                .orElseThrow(() -> new CardNotFoundException(cardId));
+    public void createDefaultCards(String userId) {
+        Card usd = new Card(userId, generateNumber("USD"), "USD");
+        Card eur = new Card(userId, generateNumber("EUR"), "EUR");
+        cardRepository.saveAll(List.of(usd, eur));
+    }
+
+    private String generateNumber(String currency) {
+        String prefix = currency.equals("USD") ? "4111" : "5500";
+        return prefix + " **** **** " + random4();
+    }
+
+    private String random4() {
+        return String.valueOf((int)(Math.random() * 9000) + 1000);
+    }
+
+    public List<Card> getCardsForUser(String userId) {
+        return cardRepository.findAllByUserId(userId);
+    }
+
+    public Card getById(UUID cardId) {
+        return cardRepository.findById(cardId)
+                .orElseThrow(() -> new RuntimeException("Card not found: " + cardId));
     }
 }
