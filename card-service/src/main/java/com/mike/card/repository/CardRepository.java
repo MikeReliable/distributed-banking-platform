@@ -9,4 +9,6 @@ import java.util.UUID;
 public interface CardRepository extends JpaRepository<Card, UUID> {
 
     List<Card> findAllByUserId(String userId);
+
+    boolean existsByUserIdAndCurrency(String userId, String currency);
 }

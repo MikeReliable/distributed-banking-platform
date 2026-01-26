@@ -34,6 +34,7 @@ public class UserCreatedConsumer {
         try {
             log.info("Received USER_CREATED event: {}", event);
             cardService.createDefaultCards(event.userId());
+            log.info("USER_CREATED event processed successfully. userId={}", event.userId());
         } finally {
             MDC.clear();
         }
