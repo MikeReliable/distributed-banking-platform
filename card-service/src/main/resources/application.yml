@@ -22,7 +22,7 @@ spring:
     change-log: classpath:db/changelog/db.changelog-master.yaml
 
   kafka:
-    bootstrap-servers: localhost:9092
+    bootstrap-servers: kafka:9092
     consumer:
       group-id: card-service-group
       auto-offset-reset: earliest
