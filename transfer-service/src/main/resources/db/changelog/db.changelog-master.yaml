@@ -1,0 +1,12 @@
+databaseChangeLog:
+  - include:
+      file: db/changelog/V1__init_transfers_table.yaml
+
+  - include:
+      file: db/changelog/V2__init_accounts_table.yaml
+
+  - include:
+      file: db/changelog/V3__init_idempotent_requests_table.yaml
+
+  - include:
+      file: db/changelog/V4__init_outbox_table.yaml

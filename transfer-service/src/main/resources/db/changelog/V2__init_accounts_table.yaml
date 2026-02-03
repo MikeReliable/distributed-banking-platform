@@ -1,46 +1,33 @@
 databaseChangeLog:
   - changeSet:
-      id: 1-create-cards
+      id: 2-create-accounts
       author: mike
       changes:
         - createTable:
-            tableName: cards
+            tableName: accounts
             columns:
               - column:
                   name: id
                   type: uuid
                   constraints:
                     primaryKey: true
-                    nullable: false
               - column:
-                  name: user_id
-                  type: uuid
+                  name: version
+                  type: bigint
+                  defaultValueNumeric: 0
                   constraints:
                     nullable: false
               - column:
-                  name: number
-                  type: varchar(32)
+                  name: balance
+                  type: numeric(19,2)
                   constraints:
                     nullable: false
-                    unique: true
               - column:
                   name: currency
-                  type: varchar(3)
-                  constraints:
-                    nullable: false
-              - column:
-                  name: type
-                  type: varchar(20)
-                  constraints:
-                    nullable: false
-              - column:
-                  name: status
-                  type: varchar(20)
+                  type: varchar(10)
                   constraints:
                     nullable: false
               - column:
                   name: created_at
                   type: timestamp
                   defaultValueComputed: CURRENT_TIMESTAMP
-                  constraints:
-                    nullable: false

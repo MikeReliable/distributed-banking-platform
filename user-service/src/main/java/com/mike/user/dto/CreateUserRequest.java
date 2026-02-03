@@ -12,5 +12,7 @@ public record CreateUserRequest(
 
         @Email
         @NotBlank
-        String email
+        String email,
+
+        String externalId
 ) {}

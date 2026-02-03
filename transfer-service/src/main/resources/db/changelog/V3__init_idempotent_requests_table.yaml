@@ -1,0 +1,22 @@
+databaseChangeLog:
+  - changeSet:
+      id: 3-create-idempotent-transfer
+      author: mike
+      changes:
+        - createTable:
+            tableName: idempotent_requests
+            columns:
+              - column:
+                  name: key
+                  type: varchar(128)
+                  constraints:
+                    primaryKey: true
+              - column:
+                  name: entity_id
+                  type: uuid
+                  constraints:
+                    nullable: false
+              - column:
+                  name: created_at
+                  type: timestamp
+                  defaultValueComputed: CURRENT_TIMESTAMP

@@ -1,37 +1,48 @@
 package com.mike.user.service;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.mike.user.dto.CreateUserRequest;
-import com.mike.user.dto.UserResponse;
+import com.mike.user.domain.IdempotentRequest;
 import com.mike.user.domain.User;
+import com.mike.user.dto.CreateUserRequest;
+import com.mike.user.dto.UpdateUserRequest;
+import com.mike.user.dto.UserResponse;
 import com.mike.user.event.UserCreatedEvent;
 import com.mike.user.outbox.OutboxEvent;
 import com.mike.user.outbox.OutboxRepository;
+import com.mike.user.repository.IdempotentRepository;
 import com.mike.user.repository.UserRepository;
-import jakarta.transaction.Transactional;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
+import java.util.NoSuchElementException;
 import java.util.UUID;
 
 @Service
+@RequiredArgsConstructor
 public class UserService {
 
     private final UserRepository userRepository;
     private final OutboxRepository outboxRepository;
     private final ObjectMapper objectMapper;
-
-    public UserService(
-            UserRepository userRepository,
-            OutboxRepository outboxRepository,
-            ObjectMapper objectMapper
-    ) {
-        this.userRepository = userRepository;
-        this.outboxRepository = outboxRepository;
-        this.objectMapper = objectMapper;
-    }
+    private final IdempotentRepository idempotentRepository;
 
     @Transactional
-    public UserResponse createUser(CreateUserRequest request) {
+    public UserResponse createUser(CreateUserRequest request, String idempotencyKey) {
+
+        if (idempotencyKey != null) {
+            return idempotentRepository.findById(idempotencyKey)
+                    .map(IdempotentRequest::getEntityId)
+                    .flatMap(userRepository::findById)
+                    .map(this::map)
+                    .orElseGet(() -> createInternal(request, idempotencyKey));
+        }
+
+        return createInternal(request, null);
+    }
+
+    private UserResponse createInternal(CreateUserRequest request, String key) {
 
         if (userRepository.existsByEmail(request.email())) {
             throw new IllegalArgumentException("Email already exists");
@@ -47,34 +58,62 @@ public class UserService {
 
         userRepository.save(user);
 
-        UserCreatedEvent event = new UserCreatedEvent(
-                userId.toString(),
-                user.getUsername(),
-                user.getEmail()
-        );
+        if (key != null) {
+            idempotentRepository.save(new IdempotentRequest(key, userId));
+        }
+
+        UserCreatedEvent event = new UserCreatedEvent(userId.toString());
 
         OutboxEvent outbox = new OutboxEvent(
                 UUID.randomUUID(),
                 "User",
                 userId.toString(),
                 "USER_CREATED",
-                serialize(event)
+                toJson(event)
         );
 
         outboxRepository.save(outbox);
 
-        return new UserResponse(
-                userId,
-                user.getUsername(),
-                user.getEmail()
-        );
+        return map(user);
     }
 
-    private String serialize(Object event) {
+    private JsonNode toJson(Object event) {
         try {
-            return objectMapper.writeValueAsString(event);
+            return objectMapper.valueToTree(event);
         } catch (Exception e) {
             throw new RuntimeException("Failed to serialize event", e);
         }
+    }
+
+    @Transactional(readOnly = true)
+    public UserResponse getById(UUID id) {
+        return userRepository.findById(id)
+                .filter(u -> !u.isDeleted())
+                .map(this::map)
+                .orElseThrow(() -> new NoSuchElementException("User not found"));
+    }
+
+    @Transactional(readOnly = true)
+    public UserResponse getByEmail(String email) {
+        return userRepository.findByEmailAndDeletedFalse(email)
+                .map(this::map)
+                .orElseThrow();
+    }
+
+    @Transactional
+    public UserResponse update(UUID id, UpdateUserRequest request) {
+        User user = userRepository.findById(id).orElseThrow();
+        user.update(request.username());
+        return map(user);
+    }
+
+    @Transactional
+    public void delete(UUID id) {
+        User user = userRepository.findById(id).orElseThrow();
+        user.softDelete();
+    }
+
+    private UserResponse map(User u) {
+        return new UserResponse(u.getId(), u.getEmail(), u.getUsername(), u.getStatus());
     }
 }

@@ -13,6 +13,9 @@ dependencies {
     implementation("org.springframework.kafka:spring-kafka")
     implementation("org.liquibase:liquibase-core")
 
+    implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.3.0")
+    implementation("com.fasterxml.jackson.core:jackson-databind")
+
     runtimeOnly("org.postgresql:postgresql")
 
     compileOnly("org.projectlombok:lombok:1.18.32")
