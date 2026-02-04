@@ -1,5 +1,6 @@
 package com.mike.transfer.domain;
 
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
@@ -15,6 +16,7 @@ public class IdempotentRequest {
     @Id
     private String key;
 
+    @Column(name = "entity_id", nullable = false)
     private UUID entityId;
 
     protected IdempotentRequest() {}

@@ -1,38 +1,46 @@
 databaseChangeLog:
   - changeSet:
-      id: 2-create-accounts
+      id: 2-create-outbox
       author: mike
       changes:
         - createTable:
-            tableName: accounts
+            tableName: outbox
             columns:
               - column:
                   name: id
                   type: uuid
                   constraints:
                     primaryKey: true
+                    nullable: false
               - column:
-                  name: user_id
-                  type: uuid
+                  name: aggregate_type
+                  type: varchar(100)
                   constraints:
                     nullable: false
               - column:
-                  name: version
-                  type: bigint
-                  defaultValueNumeric: 0
+                  name: aggregate_id
+                  type: varchar(100)
                   constraints:
                     nullable: false
               - column:
-                  name: balance
-                  type: numeric(19,2)
+                  name: type
+                  type: varchar(100)
                   constraints:
                     nullable: false
               - column:
-                  name: currency
-                  type: varchar(3)
+                  name: payload
+                  type: jsonb
                   constraints:
                     nullable: false
               - column:
                   name: created_at
                   type: timestamp
                   defaultValueComputed: CURRENT_TIMESTAMP
+                  constraints:
+                    nullable: false
+              - column:
+                  name: published
+                  type: boolean
+                  defaultValueBoolean: false
+                  constraints:
+                    nullable: false

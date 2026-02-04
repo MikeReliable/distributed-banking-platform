@@ -114,6 +114,6 @@ public class UserService {
     }
 
     private UserResponse map(User u) {
-        return new UserResponse(u.getId(), u.getEmail(), u.getUsername(), u.getStatus());
+        return new UserResponse(u.getId(), u.getUsername(), u.getEmail(), u.getStatus());
     }
 }

@@ -22,6 +22,9 @@ public class Card {
     @Column(name = "user_id", nullable = false)
     private UUID userId;
 
+    @Column(name = "account_id")
+    private UUID accountId;
+
     @Column(nullable = false)
     private String number;
 

@@ -18,6 +18,9 @@ databaseChangeLog:
                   constraints:
                     nullable: false
               - column:
+                  name: account_id
+                  type: uuid
+              - column:
                   name: number
                   type: varchar(32)
                   constraints:

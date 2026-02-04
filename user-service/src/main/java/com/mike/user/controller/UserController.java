@@ -30,16 +30,19 @@ public class UserController {
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
+    @Operation(summary = "Get user by id")
     @GetMapping("/{id}")
     public UserResponse get(@PathVariable UUID id) {
         return userService.getById(id);
     }
 
+    @Operation(summary = "Get user by email")
     @GetMapping
     public UserResponse getByEmail(@RequestParam String email) {
         return userService.getByEmail(email);
     }
 
+    @Operation(summary = "Update user")
     @PatchMapping("/{id}")
     public UserResponse update(
             @PathVariable UUID id,
@@ -48,6 +51,7 @@ public class UserController {
         return userService.update(id, request);
     }
 
+    @Operation(summary = "Delete user")
     @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void delete(@PathVariable UUID id) {

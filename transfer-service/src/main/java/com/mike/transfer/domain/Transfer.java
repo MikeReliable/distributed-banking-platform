@@ -1,11 +1,7 @@
 package com.mike.transfer.domain;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
 import lombok.Getter;
-
 
 import java.math.BigDecimal;
 import java.util.UUID;
@@ -18,15 +14,17 @@ public class Transfer {
     @Id
     private UUID id;
 
-    @Column(name = "from_account")
+    @Column(name = "from_account", nullable = false)
     private UUID fromAccount;
 
-    @Column(name = "to_account")
+    @Column(name = "to_account", nullable = false)
     private UUID toAccount;
 
+    @Column(nullable = false)
     private BigDecimal amount;
 
-    protected Transfer() {}
+    protected Transfer() {
+    }
 
     public Transfer(UUID id, UUID from, UUID to, BigDecimal amount) {
         this.id = id;
