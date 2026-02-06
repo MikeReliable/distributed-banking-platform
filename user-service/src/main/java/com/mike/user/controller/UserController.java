@@ -15,7 +15,7 @@ import java.util.UUID;
 
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/api/users")
+@RequestMapping("/users")
 public class UserController {
 
     private final UserService userService;
@@ -37,7 +37,7 @@ public class UserController {
     }
 
     @Operation(summary = "Get user by email")
-    @GetMapping
+    @GetMapping("/by-email")
     public UserResponse getByEmail(@RequestParam String email) {
         return userService.getByEmail(email);
     }

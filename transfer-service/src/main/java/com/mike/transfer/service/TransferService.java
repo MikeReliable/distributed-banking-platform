@@ -76,6 +76,10 @@ public class TransferService {
         Account target = accountRepository.findById(to)
                 .orElseThrow(() -> new NoSuchElementException("Target account not found"));
 
+        if (!source.getCurrency().equals(target.getCurrency())) {
+            throw new IllegalStateException("Currency mismatch");
+        }
+
         source.debit(amount);
         target.credit(amount);
 

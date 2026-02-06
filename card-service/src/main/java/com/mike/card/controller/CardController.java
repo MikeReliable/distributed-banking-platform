@@ -1,9 +1,11 @@
 package com.mike.card.controller;
 
 import com.mike.card.domain.Card;
+import com.mike.card.dto.CardResponse;
 import com.mike.card.dto.LinkAccountRequest;
 import com.mike.card.service.CardService;
 import io.swagger.v3.oas.annotations.Operation;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -24,14 +26,14 @@ public class CardController {
 
     @Operation(summary = "Get user cards")
     @GetMapping
-    public List<Card> myCards(@RequestHeader("X-User-Id") UUID userId) {
+    public List<CardResponse> myCards(@RequestHeader("X-User-Id") UUID userId) {
         log.info("Fetching cards for user={}", userId);
         return service.getCardsForUser(userId);
     }
 
     @Operation(summary = "Get card by id")
     @GetMapping(path = "/{cardId}")
-    public Card getCardById(@PathVariable UUID cardId) {
+    public CardResponse getCardById(@PathVariable UUID cardId) {
         return service.getById(cardId);
     }
 
@@ -48,7 +50,8 @@ public class CardController {
     }
 
     @PatchMapping("/{cardId}/account")
-    public void linkAccount(@PathVariable UUID cardId, @RequestBody LinkAccountRequest request) {
+    public void linkAccount(@PathVariable UUID cardId,
+                            @Valid @RequestBody LinkAccountRequest request) {
         service.linkAccount(cardId, request.accountId());
     }
 }

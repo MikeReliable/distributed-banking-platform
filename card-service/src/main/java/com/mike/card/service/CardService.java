@@ -6,6 +6,7 @@ import com.mike.card.domain.Card;
 import com.mike.card.domain.CardStatus;
 import com.mike.card.domain.CardType;
 import com.mike.card.domain.Currency;
+import com.mike.card.dto.CardResponse;
 import com.mike.card.event.CardCreatedEvent;
 import com.mike.card.outbox.OutboxEvent;
 import com.mike.card.outbox.OutboxRepository;
@@ -63,23 +64,32 @@ public class CardService {
     }
 
     @Transactional(readOnly = true)
-    public List<Card> getCardsForUser(UUID userId) {
-        return cardRepository.findAllByUserId(userId);
+    public List<CardResponse> getCardsForUser(UUID userId) {
+        return cardRepository.findAllByUserId(userId)
+                .stream()
+                .map(CardResponse::from)
+                .toList();
     }
 
-    public Card getById(UUID cardId) {
+    @Transactional(readOnly = true)
+    public CardResponse getById(UUID cardId) {
         return cardRepository.findById(cardId)
-                .orElseThrow(() -> new RuntimeException("Card not found: " + cardId));
+                .map(CardResponse::from)
+                .orElseThrow(() -> new NoSuchElementException("Card not found"));
     }
 
     @Transactional
     public void block(UUID id) {
-        cardRepository.findById(id).orElseThrow().block();
+        Card card = cardRepository.findById(id)
+                .orElseThrow(() -> new NoSuchElementException("Card not found"));
+        card.block();
     }
 
     @Transactional
     public void close(UUID id) {
-        cardRepository.findById(id).orElseThrow().close();
+        Card card = cardRepository.findById(id)
+                .orElseThrow(() -> new NoSuchElementException("Card not found"));
+        card.close();
     }
 
     public void resolveAccountId(UUID userId) {

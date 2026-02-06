@@ -11,7 +11,8 @@ import java.util.UUID;
 @Getter
 @Setter
 @Entity
-@Table(name = "cards")
+@Table(name = "cards",
+        uniqueConstraints = @UniqueConstraint(columnNames = "number"))
 public class Card {
 
     @Id
@@ -25,7 +26,7 @@ public class Card {
     @Column(name = "account_id")
     private UUID accountId;
 
-    @Column(nullable = false)
+    @Column(nullable = false, unique = true)
     private String number;
 
     @Enumerated(EnumType.STRING)
@@ -33,13 +34,18 @@ public class Card {
     private Currency currency;
 
     @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
     private CardType type;
 
     @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
     private CardStatus status;
 
     @Column(name = "created_at", nullable = false, updatable = false)
     private Instant createdAt;
+
+    @Version
+    private long version;
 
     protected Card() {
     }

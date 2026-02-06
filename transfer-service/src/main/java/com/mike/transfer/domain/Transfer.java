@@ -27,10 +27,13 @@ public class Transfer {
     }
 
     public Transfer(UUID id, UUID from, UUID to, BigDecimal amount) {
+        if (amount == null || amount.signum() <= 0) {
+            throw new IllegalArgumentException("Transfer amount must be positive");
+        }
         this.id = id;
         this.fromAccount = from;
         this.toAccount = to;
-        this.amount = amount;
+        this.amount =  Money.normalize(amount);
     }
 }
 

@@ -2,9 +2,11 @@ package com.mike.transfer.controller;
 
 import com.mike.transfer.domain.Account;
 import com.mike.transfer.domain.TransferRequest;
+import com.mike.transfer.dto.AccountResponse;
 import com.mike.transfer.service.TransferService;
 import io.swagger.v3.oas.annotations.Operation;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.Positive;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.web.bind.annotation.*;
@@ -13,7 +15,6 @@ import java.math.BigDecimal;
 import java.util.UUID;
 
 @RestController
-@RequestMapping("/transfers")
 public class TransferController {
 
     private static final Logger log = LoggerFactory.getLogger(TransferController.class);
@@ -24,7 +25,7 @@ public class TransferController {
     }
 
     @Operation(summary = "Make transfer between cards")
-    @PostMapping
+    @PostMapping("/transfers")
     public void makeTransfer(@Valid @RequestBody TransferRequest request,
                              @RequestHeader(value = "Idempotency-Key", required = false) String idempotencyKey) {
         log.info("Transfer request: from={} to={} amount={}",
@@ -36,7 +37,7 @@ public class TransferController {
     @PostMapping("/accounts/{accountId}/top-up")
     public BigDecimal topUp(
             @PathVariable UUID accountId,
-            @RequestParam BigDecimal amount,
+            @RequestParam @Positive BigDecimal amount,
             @RequestHeader(value = "Idempotency-Key", required = false) String idempotencyKey
     ) {
         return service.topUp(accountId, amount, idempotencyKey);
@@ -46,7 +47,7 @@ public class TransferController {
     @PostMapping("/accounts/{accountId}/withdraw")
     public BigDecimal withdraw(
             @PathVariable UUID accountId,
-            @RequestParam BigDecimal amount,
+            @RequestParam @Positive BigDecimal amount,
             @RequestHeader(value = "Idempotency-Key", required = false) String idempotencyKey
     ) {
         return service.withdraw(accountId, amount, idempotencyKey);
@@ -59,8 +60,14 @@ public class TransferController {
     }
 
     @Operation(summary = "Get account by user id")
-    @GetMapping("/{userId}")
-    public Account getAccountByUserId(@PathVariable UUID userId) {
-        return service.getAccountByUserId(userId);
+    @GetMapping("/{userId}/account")
+    public AccountResponse getAccountByUserId(@PathVariable UUID userId) {
+        Account account = service.getAccountByUserId(userId);
+        return new AccountResponse(
+                account.getId(),
+                account.getUserId(),
+                account.getCurrency().name(),
+                account.getBalance()
+        );
     }
 }
