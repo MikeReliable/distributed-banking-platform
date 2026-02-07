@@ -5,6 +5,7 @@ import lombok.Getter;
 import org.springframework.data.annotation.Version;
 
 import java.math.BigDecimal;
+import java.time.Instant;
 import java.util.UUID;
 
 @Getter
@@ -28,6 +29,9 @@ public class Account {
     @Column(nullable = false)
     private BigDecimal balance;
 
+    @Column(name = "created_at", updatable = false)
+    private Instant createdAt;
+
     protected Account() {}
 
     public Account(UUID id, UUID userId, Currency currency) {
@@ -35,6 +39,7 @@ public class Account {
         this.userId = userId;
         this.currency = currency;
         this.balance = Money.normalize(BigDecimal.ZERO);
+        this.createdAt = Instant.now();
     }
 
     public void credit(BigDecimal amount) {

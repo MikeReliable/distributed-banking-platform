@@ -1,6 +1,5 @@
 package com.mike.card.controller;
 
-import com.mike.card.domain.Card;
 import com.mike.card.dto.CardResponse;
 import com.mike.card.dto.LinkAccountRequest;
 import com.mike.card.service.CardService;
@@ -49,6 +48,7 @@ public class CardController {
         service.close(cardId);
     }
 
+    @Operation(summary = "Link card with account")
     @PatchMapping("/{cardId}/account")
     public void linkAccount(@PathVariable UUID cardId,
                             @Valid @RequestBody LinkAccountRequest request) {

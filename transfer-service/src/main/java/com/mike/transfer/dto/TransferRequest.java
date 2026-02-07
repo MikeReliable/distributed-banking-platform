@@ -1,4 +1,4 @@
-package com.mike.transfer.domain;
+package com.mike.transfer.dto;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;

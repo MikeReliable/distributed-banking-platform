@@ -1,6 +1,6 @@
 databaseChangeLog:
   - changeSet:
-      id: 3-create-idempotent-transfer
+      id: 5-create-idempotent-transfer
       author: mike
       changes:
         - createTable:

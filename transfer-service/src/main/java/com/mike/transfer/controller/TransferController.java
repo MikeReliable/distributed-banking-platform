@@ -1,7 +1,7 @@
 package com.mike.transfer.controller;
 
 import com.mike.transfer.domain.Account;
-import com.mike.transfer.domain.TransferRequest;
+import com.mike.transfer.dto.TransferRequest;
 import com.mike.transfer.dto.AccountResponse;
 import com.mike.transfer.service.TransferService;
 import io.swagger.v3.oas.annotations.Operation;

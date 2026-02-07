@@ -27,6 +27,35 @@ databaseChangeLog:
                   constraints:
                     nullable: false
               - column:
-                  name: created_at
+                  name: transaction_at
                   type: timestamp
                   defaultValueComputed: CURRENT_TIMESTAMP
+                  constraints:
+                    nullable: false
+
+  - changeSet:
+      id: 2-create-index-from-account-transaction
+      author: mike
+      changes:
+        - createIndex:
+            tableName: transfers
+            indexName: idx_transfers_from_account_tx_time
+            columns:
+              - column:
+                  name: from_account
+              - column:
+                  name: transaction_at
+
+  - changeSet:
+      id: 3-create-index-from-account-amount-desc
+      author: mike
+      changes:
+        - createIndex:
+            tableName: transfers
+            indexName: idx_transfers_from_account_amount_desc
+            columns:
+              - column:
+                  name: from_account
+              - column:
+                  name: amount
+                  descending: true

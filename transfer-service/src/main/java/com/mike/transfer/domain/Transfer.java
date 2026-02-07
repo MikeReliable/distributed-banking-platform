@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 import lombok.Getter;
 
 import java.math.BigDecimal;
+import java.time.Instant;
 import java.util.UUID;
 
 @Getter
@@ -23,6 +24,9 @@ public class Transfer {
     @Column(nullable = false)
     private BigDecimal amount;
 
+    @Column(name = "transaction_at", nullable = false, updatable = false)
+    private Instant transactionAt;
+
     protected Transfer() {
     }
 
@@ -34,6 +38,7 @@ public class Transfer {
         this.fromAccount = from;
         this.toAccount = to;
         this.amount =  Money.normalize(amount);
+        this.transactionAt = Instant.now();
     }
 }
 

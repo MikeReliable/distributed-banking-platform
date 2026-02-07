@@ -1,6 +1,6 @@
 databaseChangeLog:
   - changeSet:
-      id: 2-create-accounts
+      id: 4-create-accounts
       author: mike
       changes:
         - createTable:
