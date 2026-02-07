@@ -26,7 +26,6 @@ public class CardController {
     @Operation(summary = "Get user cards")
     @GetMapping
     public List<CardResponse> myCards(@RequestHeader("X-User-Id") UUID userId) {
-        log.info("Fetching cards for user={}", userId);
         return service.getCardsForUser(userId);
     }
 

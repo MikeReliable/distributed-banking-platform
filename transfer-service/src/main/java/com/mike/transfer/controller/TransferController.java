@@ -28,8 +28,6 @@ public class TransferController {
     @PostMapping("/transfers")
     public void makeTransfer(@Valid @RequestBody TransferRequest request,
                              @RequestHeader(value = "Idempotency-Key", required = false) String idempotencyKey) {
-        log.info("Transfer request: from={} to={} amount={}",
-                request.fromCardId(), request.toCardId(), request.amount());
         service.transfer(request, idempotencyKey);
     }
 

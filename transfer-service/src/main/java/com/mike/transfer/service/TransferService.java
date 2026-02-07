@@ -1,6 +1,9 @@
 package com.mike.transfer.service;
 
-import com.mike.transfer.domain.*;
+import com.mike.transfer.domain.Account;
+import com.mike.transfer.domain.Currency;
+import com.mike.transfer.domain.IdempotentRequest;
+import com.mike.transfer.domain.Transfer;
 import com.mike.transfer.dto.TransferRequest;
 import com.mike.transfer.repository.AccountRepository;
 import com.mike.transfer.repository.IdempotentRepository;
@@ -31,11 +34,11 @@ public class TransferService {
     public void createDefaultAccounts(UUID userId) {
         try {
             if (accountRepository.findByUserId(userId).isPresent()) {
-                log.info("Account already exists for user {}", userId);
+                log.info("Account already exists | userId={} ", userId);
                 return;
             }
 
-            UUID accountId =  UUID.randomUUID();
+            UUID accountId = UUID.randomUUID();
             accountRepository.save(new Account(
                     accountId,
                     userId,
@@ -44,14 +47,22 @@ public class TransferService {
 
             cardResolverService.updateCardAccountInfo(userId);
 
-            log.info("Account created. accountId={}, userId={}, currency={}", accountId, userId, Currency.USD);
+            log.info(
+                    "Account created | accountId={} | userId={} | currency={}",
+                    accountId, userId, Currency.USD
+            );
         } catch (DataIntegrityViolationException ex) {
-            log.info("Account created concurrently for user {}", userId);
+            log.info("Account already exists (concurrent) | userId={} ", userId);
         }
     }
 
     @Transactional
     public UUID transfer(TransferRequest request, String idempotencyKey) {
+
+        log.info(
+                "Transfer started | fromCardId={} | toCardId={} | amount={}",
+                request.fromCardId(), request.toCardId(), request.amount()
+        );
 
         UUID fromAccountId = cardResolverService.getAccountId(UUID.fromString(request.fromCardId()));
         UUID toAccountId = cardResolverService.getAccountId(UUID.fromString(request.toCardId()));
@@ -91,6 +102,11 @@ public class TransferService {
             idempotentRepository.save(new IdempotentRequest(idempotencyKey, transferId));
         }
 
+        log.info(
+                "Transfer completed | transferId={} | fromAccount={} | toAccount={}",
+                transferId, from, to
+        );
+
         return transferId;
     }
 
@@ -114,6 +130,11 @@ public class TransferService {
             idempotentRepository.save(new IdempotentRequest(idempotencyKey, accountId));
         }
 
+        log.info(
+                "TopUp completed | accountId={} | amount={}",
+                accountId, amount
+        );
+
         return account.getBalance();
     }
 
@@ -136,6 +157,11 @@ public class TransferService {
         if (idempotencyKey != null) {
             idempotentRepository.save(new IdempotentRequest(idempotencyKey, accountId));
         }
+
+        log.info(
+                "Withdraw completed | accountId={} | amount={}",
+                accountId, amount
+        );
 
         return account.getBalance();
     }

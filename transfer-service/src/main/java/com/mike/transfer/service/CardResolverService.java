@@ -6,11 +6,11 @@ import com.mike.transfer.dto.CardDto;
 import com.mike.transfer.dto.LinkAccountRequest;
 import com.mike.transfer.repository.AccountRepository;
 import lombok.RequiredArgsConstructor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.retry.annotation.Backoff;
 import org.springframework.retry.annotation.Retryable;
 import org.springframework.stereotype.Service;
-import org.springframework.web.client.ResourceAccessException;
-import org.springframework.web.client.RestTemplate;
 
 import java.util.NoSuchElementException;
 import java.util.UUID;
@@ -18,6 +18,8 @@ import java.util.UUID;
 @Service
 @RequiredArgsConstructor
 public class CardResolverService {
+
+    private static final Logger log = LoggerFactory.getLogger(CardResolverService.class);
 
     private final AccountRepository accountRepository;
     private final CardClient cardClient;
@@ -41,6 +43,8 @@ public class CardResolverService {
     )
     public void updateCardAccountInfo(UUID userId) {
 
+        log.info("Resolving card-account links | userId={}", userId);
+
         Account account = accountRepository.findByUserId(userId)
                 .orElseThrow(() ->
                         new NoSuchElementException("Account not found for userId=" + userId)
@@ -48,14 +52,18 @@ public class CardResolverService {
 
         CardDto[] cards = cardClient.getCardsByUser(userId);
 
-        if (cards == null)
+        if (cards == null) {
+            log.info("No cards found | userId={}", userId);
             return;
+        }
 
         for (CardDto card : cards) {
             if (card.accountId() == null) {
-                cardClient.linkAccount(
-                        card.id(),
-                        new LinkAccountRequest(account.getId())
+                log.info(
+                        "Linking card to account | cardId={} | accountId={}",
+                        card.id(), account.getId()
+                );
+                cardClient.linkAccount(card.id(), new LinkAccountRequest(account.getId())
                 );
             }
         }

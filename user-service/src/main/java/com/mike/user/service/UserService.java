@@ -13,6 +13,8 @@ import com.mike.user.outbox.OutboxRepository;
 import com.mike.user.repository.IdempotentRepository;
 import com.mike.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -22,6 +24,8 @@ import java.util.UUID;
 @Service
 @RequiredArgsConstructor
 public class UserService {
+
+    private static final Logger log = LoggerFactory.getLogger(UserService.class);
 
     private final UserRepository userRepository;
     private final OutboxRepository outboxRepository;
@@ -74,6 +78,11 @@ public class UserService {
 
         outboxRepository.save(outbox);
 
+        log.info(
+                "User created | userId={} | email={}",
+                userId, request.email()
+        );
+
         return map(user);
     }
 
@@ -104,6 +113,7 @@ public class UserService {
     public UserResponse update(UUID id, UpdateUserRequest request) {
         User user = userRepository.findById(id).orElseThrow();
         user.update(request.username());
+        log.info("User updated | userId={}", id);
         return map(user);
     }
 
@@ -111,6 +121,7 @@ public class UserService {
     public void delete(UUID id) {
         User user = userRepository.findById(id).orElseThrow();
         user.softDelete();
+        log.info("User deleted | userId={}", id);
     }
 
     private UserResponse map(User u) {

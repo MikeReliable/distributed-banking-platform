@@ -29,7 +29,7 @@ public class CardCreatedConsumer {
     public void listen(@Payload String message) throws JsonProcessingException {
 
         if (message == null || message.isBlank()) {
-            log.warn("Received empty Kafka message, skipping");
+            log.warn("Kafka message empty");
             return;
         }
 
@@ -40,12 +40,12 @@ public class CardCreatedConsumer {
             JsonNode payloadNode = root.get("payload");
 
             if (typeNode == null || payloadNode == null) {
-                log.warn("Invalid event format: {}", message);
+                log.warn("Invalid event format");
                 return;
             }
 
             if (!"CARD_CREATED".equals(root.get("type").asText())) {
-                log.debug("Ignoring event type={}", root.get("type").asText());
+                log.debug("Kafka event ignored | type={}", root.get("type").asText());
                 return;
             }
 
@@ -56,16 +56,16 @@ public class CardCreatedConsumer {
             MDC.put("requestId", requestId);
 
             if (event.userId() == null) {
-                log.warn("CARD_CREATED without userId, skipping");
+                log.warn("CARD_CREATED without userId");
                 return;
             }
 
-            log.info("Received CARD_CREATED event: {}", event);
+            log.info("CARD_CREATED event received | userId={}", event.userId());
             transferService.createDefaultAccounts(UUID.fromString(event.userId()));
-            log.info("CARD_CREATED processed successfully userId={}", event.userId());
+            log.info("CARD_CREATED event processed | userId={}", event.userId());
 
         } catch (Exception e) {
-            log.error("Failed to process Kafka message: {}", message, e);
+            log.error("Kafka event processing failed", e);
             throw e;
         } finally {
             MDC.clear();

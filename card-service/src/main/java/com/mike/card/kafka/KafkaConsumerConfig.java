@@ -37,11 +37,10 @@ public class KafkaConsumerConfig {
         DefaultErrorHandler handler = new DefaultErrorHandler(
                 (ConsumerRecord<?, ?> record, Exception ex) -> {
                     log.error(
-                            "Kafka message skipped. topic={}, partition={}, offset={}, value={}",
+                            "Kafka message skipped. topic={}, partition={}, offset={}",
                             record.topic(),
                             record.partition(),
                             record.offset(),
-                            record.value(),
                             ex
                     );
                 },

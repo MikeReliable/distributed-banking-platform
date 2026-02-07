@@ -49,10 +49,18 @@ public class OutboxPublisher {
                 );
 
                 event.markPublished();
-                log.info("Outbox event published: {}", event.getType());
-
+                log.info(
+                        "Outbox event published | type={} | aggregateId={}",
+                        event.getType(),
+                        event.getAggregateId()
+                );
             } catch (Exception e) {
-                log.error("Failed to publish outbox event {}", event.getId(), e);
+                log.error(
+                        "Outbox publish failed | eventId={} | type={}",
+                        event.getId(),
+                        event.getType(),
+                        e
+                );
             }
         }
     }

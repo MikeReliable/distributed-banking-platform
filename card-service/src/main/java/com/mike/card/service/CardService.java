@@ -37,7 +37,10 @@ public class CardService {
         try {
             if (cardRepository.existsByUserIdAndTypeAndCurrencyAndStatus(
                     userId, CardType.DEBIT, Currency.USD, CardStatus.ACTIVE)) {
-                log.info("Active debit card already exists for user {}", userId);
+                log.info(
+                        "Card already exists | userId={} | type={} | currency={}",
+                        userId, CardType.DEBIT, Currency.USD
+                );
                 return;
             }
             String number = generateCardNumber(Currency.USD);
@@ -48,9 +51,15 @@ public class CardService {
                     CardType.DEBIT
             ));
             resolveAccountId(userId);
-            log.info("Card created. userId={}, number={}, currency={}", userId, number, Currency.USD);
+            log.info(
+                    "Card created | userId={} | currency={} | type={}",
+                    userId, Currency.USD, CardType.DEBIT
+            );
         } catch (DataIntegrityViolationException ex) {
-            log.info("Active debit card created concurrently for user {}", userId);
+            log.info(
+                    "Card already exists (concurrent) | userId={} | type={} | currency={}",
+                    userId, CardType.DEBIT, Currency.USD
+            );
         }
     }
 
@@ -124,11 +133,17 @@ public class CardService {
         }
 
         if (card.getAccountId() != null) {
-            log.info("Card {} already linked to account {}", cardId, card.getAccountId());
+            log.warn(
+                    "Card already linked | cardId={} | accountId={}",
+                    cardId, card.getAccountId()
+            );
             return;
         }
 
         card.setAccountId(accountId);
-        log.info("Card {} linked to account {}", cardId, accountId);
+        log.info(
+                "Card linked successfully| cardId={} | accountId={}",
+                cardId, card.getAccountId()
+        );
     }
 }
