@@ -4,13 +4,13 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.mike.transfer.event.CardCreatedEvent;
-import com.mike.transfer.repository.AccountRepository;
 import com.mike.transfer.service.TransferService;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
 import org.springframework.kafka.annotation.KafkaListener;
+import org.springframework.messaging.handler.annotation.Header;
 import org.springframework.messaging.handler.annotation.Payload;
 import org.springframework.stereotype.Component;
 
@@ -26,7 +26,10 @@ public class CardCreatedConsumer {
     private final ObjectMapper objectMapper;
 
     @KafkaListener(topics = "card-events", groupId = "transfer-service-group")
-    public void listen(@Payload String message) throws JsonProcessingException {
+    public void listen(
+            @Payload String message,
+            @Header(name = "X-Request-Id", required = false) String requestId
+    ) throws JsonProcessingException {
 
         if (message == null || message.isBlank()) {
             log.warn("Kafka message empty");
@@ -52,7 +55,9 @@ public class CardCreatedConsumer {
             CardCreatedEvent event =
                     objectMapper.treeToValue(root.get("payload"), CardCreatedEvent.class);
 
-            String requestId = "kafka-" + event.userId();
+            if (requestId == null) {
+                requestId = "kafka-" + UUID.randomUUID();
+            }
             MDC.put("requestId", requestId);
 
             if (event.userId() == null) {

@@ -1,0 +1,18 @@
+<configuration>
+
+    <property name="SERVICE" value="user-service"/>
+
+    <property name="PATTERN"
+              value="ts=%d{yyyy-MM-dd'T'HH:mm:ss.SSSX} level=%-5level service=${SERVICE} requestId=%X{requestId:-N/A} logger=%logger{36} msg=%msg%n"/>
+
+    <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder>
+            <pattern>${PATTERN}</pattern>
+        </encoder>
+    </appender>
+
+    <root level="INFO">
+        <appender-ref ref="STDOUT"/>
+    </root>
+</configuration>
+

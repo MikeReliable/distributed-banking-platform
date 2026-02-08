@@ -6,8 +6,6 @@ import com.mike.card.service.CardService;
 import io.swagger.v3.oas.annotations.Operation;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
@@ -20,7 +18,7 @@ import java.util.UUID;
 @RequestMapping("/cards")
 public class CardController {
 
-    private static final Logger log = LoggerFactory.getLogger(CardController.class);
+
     private final CardService service;
 
     @Operation(summary = "Get user cards")

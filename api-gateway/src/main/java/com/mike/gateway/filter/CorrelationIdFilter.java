@@ -16,7 +16,7 @@ import java.util.UUID;
 @Order(Ordered.HIGHEST_PRECEDENCE)
 public class CorrelationIdFilter implements WebFilter {
 
-    public static final String HEADER = "X-Request-Id";
+    public static final String HEADER = "requestId";
 
     @Override
     public @NonNull Mono<Void> filter(@NonNull ServerWebExchange exchange, @NonNull WebFilterChain chain) {

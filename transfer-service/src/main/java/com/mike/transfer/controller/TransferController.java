@@ -1,14 +1,12 @@
 package com.mike.transfer.controller;
 
 import com.mike.transfer.domain.Account;
-import com.mike.transfer.dto.TransferRequest;
 import com.mike.transfer.dto.AccountResponse;
+import com.mike.transfer.dto.TransferRequest;
 import com.mike.transfer.service.TransferService;
 import io.swagger.v3.oas.annotations.Operation;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Positive;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.web.bind.annotation.*;
 
 import java.math.BigDecimal;
@@ -17,7 +15,6 @@ import java.util.UUID;
 @RestController
 public class TransferController {
 
-    private static final Logger log = LoggerFactory.getLogger(TransferController.class);
     private final TransferService service;
 
     public TransferController(TransferService service) {

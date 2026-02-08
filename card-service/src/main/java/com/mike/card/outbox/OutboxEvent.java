@@ -20,13 +20,16 @@ public class OutboxEvent {
     @Id
     private UUID id;
 
-    @Column(name = "aggregate_type", nullable = false)
+    @Column(name = "aggregate_type", length = 100, nullable = false)
     private String aggregateType;
 
-    @Column(name = "aggregate_id", nullable = false)
+    @Column(name = "aggregate_id", length = 36, nullable = false)
     private String aggregateId;
 
-    @Column(nullable = false)
+    @Column(name = "request_id", length = 64)
+    private String requestId;
+
+    @Column(length = 64, nullable = false)
     private String type;
 
     @JdbcTypeCode(SqlTypes.JSON)
@@ -46,12 +49,14 @@ public class OutboxEvent {
             UUID id,
             String aggregateType,
             String aggregateId,
+            String requestId,
             String type,
             JsonNode payload
     ) {
         this.id = id;
         this.aggregateType = aggregateType;
         this.aggregateId = aggregateId;
+        this.requestId = requestId;
         this.type = type;
         this.payload = payload;
         this.createdAt = Instant.now();

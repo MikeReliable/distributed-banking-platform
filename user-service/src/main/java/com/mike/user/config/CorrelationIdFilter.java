@@ -1,4 +1,4 @@
-package com.mike.card.config;
+package com.mike.user.config;
 
 import jakarta.servlet.*;
 import jakarta.servlet.http.HttpServletRequest;

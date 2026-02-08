@@ -19,9 +19,14 @@ databaseChangeLog:
                     nullable: false
               - column:
                   name: aggregate_id
-                  type: varchar(100)
+                  type: varchar(36)
                   constraints:
                     nullable: false
+              - column:
+                  name: request_id
+                  type: varchar(64)
+                  constraints:
+                    nullable: true
               - column:
                   name: type
                   type: varchar(100)

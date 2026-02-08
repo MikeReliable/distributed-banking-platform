@@ -20,6 +20,7 @@ public class ClaimsHeaderFilter implements GlobalFilter {
                             .request(r -> r
                                     .header("X-User-Id", claims.get("sub").toString())
                                     .header("X-User-Role", claims.get("role").toString())
+                                    .header("X-Request-Id", exchange.getRequest().getHeaders().getFirst("X-Request-Id"))
                             )
                             .build();
                 })

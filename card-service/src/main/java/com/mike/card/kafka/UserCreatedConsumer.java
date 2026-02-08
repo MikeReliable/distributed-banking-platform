@@ -10,6 +10,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
 import org.springframework.kafka.annotation.KafkaListener;
+import org.springframework.messaging.handler.annotation.Header;
 import org.springframework.messaging.handler.annotation.Payload;
 import org.springframework.stereotype.Component;
 
@@ -25,7 +26,10 @@ public class UserCreatedConsumer {
     private final ObjectMapper objectMapper;
 
     @KafkaListener(topics = "user-events", groupId = "card-service-group")
-    public void listen(@Payload String message) throws JsonProcessingException {
+    public void listen(
+            @Payload String message,
+            @Header(name = "X-Request-Id", required = false) String requestId
+    ) throws JsonProcessingException {
 
         if (message == null || message.isBlank()) {
             log.warn("Kafka message empty");
@@ -51,7 +55,9 @@ public class UserCreatedConsumer {
             UserCreatedEvent event =
                     objectMapper.treeToValue(root.get("payload"), UserCreatedEvent.class);
 
-            String requestId = "kafka-" + event.userId();
+            if (requestId == null) {
+                requestId = "kafka-" + UUID.randomUUID();
+            }
             MDC.put("requestId", requestId);
 
             if (event.userId() == null) {

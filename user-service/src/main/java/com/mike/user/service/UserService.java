@@ -15,6 +15,7 @@ import com.mike.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.slf4j.MDC;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -72,6 +73,7 @@ public class UserService {
                 UUID.randomUUID(),
                 "User",
                 userId.toString(),
+                MDC.get("requestId"),
                 "USER_CREATED",
                 toJson(event)
         );

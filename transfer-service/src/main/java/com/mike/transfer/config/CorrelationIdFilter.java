@@ -27,7 +27,7 @@ public class CorrelationIdFilter implements Filter {
         HttpServletRequest http = (HttpServletRequest) request;
         String requestId = http.getHeader(HEADER);
 
-        if (requestId == null) {
+        if (requestId == null || requestId.isEmpty()) {
             requestId = UUID.randomUUID().toString();
         }
 
