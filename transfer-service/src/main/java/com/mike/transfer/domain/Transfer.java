@@ -1,6 +1,10 @@
 package com.mike.transfer.domain;
 
-import jakarta.persistence.*;
+import com.mike.transfer.exception.InvalidAmountException;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
 import lombok.Getter;
 
 import java.math.BigDecimal;
@@ -32,12 +36,12 @@ public class Transfer {
 
     public Transfer(UUID id, UUID from, UUID to, BigDecimal amount) {
         if (amount == null || amount.signum() <= 0) {
-            throw new IllegalArgumentException("Transfer amount must be positive");
+            throw new InvalidAmountException();
         }
         this.id = id;
         this.fromAccount = from;
         this.toAccount = to;
-        this.amount =  Money.normalize(amount);
+        this.amount = Money.normalize(amount);
         this.transactionAt = Instant.now();
     }
 }

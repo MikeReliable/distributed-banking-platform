@@ -5,6 +5,10 @@ import com.mike.transfer.domain.Currency;
 import com.mike.transfer.domain.IdempotentRequest;
 import com.mike.transfer.domain.Transfer;
 import com.mike.transfer.dto.TransferRequest;
+import com.mike.transfer.exception.AccountNotFoundException;
+import com.mike.transfer.exception.CurrencyMismatchException;
+import com.mike.transfer.exception.InvalidAmountException;
+import com.mike.transfer.exception.SameAccountTransferException;
 import com.mike.transfer.repository.AccountRepository;
 import com.mike.transfer.repository.IdempotentRepository;
 import com.mike.transfer.repository.TransferRepository;
@@ -16,7 +20,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
-import java.util.NoSuchElementException;
 import java.util.UUID;
 
 @Service
@@ -80,16 +83,16 @@ public class TransferService {
         validateAmount(amount);
 
         if (from.equals(to)) {
-            throw new IllegalArgumentException("Cannot transfer to the same account");
+            throw new SameAccountTransferException();
         }
 
         Account source = accountRepository.findById(from)
-                .orElseThrow(() -> new NoSuchElementException("Source account not found"));
+                .orElseThrow(() -> new AccountNotFoundException(from));
         Account target = accountRepository.findById(to)
-                .orElseThrow(() -> new NoSuchElementException("Target account not found"));
+                .orElseThrow(() -> new AccountNotFoundException(to));
 
         if (!source.getCurrency().equals(target.getCurrency())) {
-            throw new IllegalStateException("Currency mismatch");
+            throw new CurrencyMismatchException();
         }
 
         source.debit(amount);
@@ -122,7 +125,7 @@ public class TransferService {
         }
 
         Account account = accountRepository.findById(accountId)
-                .orElseThrow(() -> new NoSuchElementException("Account not found"));
+                .orElseThrow(() -> new AccountNotFoundException(accountId));
 
         account.credit(amount);
 
@@ -150,7 +153,7 @@ public class TransferService {
         }
 
         Account account = accountRepository.findById(accountId)
-                .orElseThrow(() -> new NoSuchElementException("Account not found"));
+                .orElseThrow(() -> new AccountNotFoundException(accountId));
 
         account.debit(amount);
 
@@ -170,12 +173,12 @@ public class TransferService {
     public BigDecimal getBalance(UUID accountId) {
         return accountRepository.findById(accountId)
                 .map(Account::getBalance)
-                .orElseThrow(() -> new NoSuchElementException("Account not found"));
+                .orElseThrow(() -> new AccountNotFoundException(accountId));
     }
 
     private void validateAmount(BigDecimal amount) {
         if (amount == null || amount.signum() <= 0) {
-            throw new IllegalArgumentException("Amount must be positive");
+            throw new InvalidAmountException();
         }
     }
 
@@ -183,7 +186,7 @@ public class TransferService {
     public Account getAccountByUserId(UUID userId) {
         return accountRepository.findByUserId(userId)
                 .orElseThrow(() ->
-                        new NoSuchElementException("Account not found for userId=" + userId)
+                        new AccountNotFoundException(userId)
                 );
     }
 }

@@ -44,6 +44,16 @@ databaseChangeLog:
                   constraints:
                     nullable: false
               - column:
+                  name: retry_count
+                  type: int
+                  constraints:
+                    nullable: false
+              - column:
+                  name: last_error
+                  type: varchar(1000)
+                  constraints:
+                    nullable: true
+              - column:
                   name: published
                   type: boolean
                   defaultValueBoolean: false

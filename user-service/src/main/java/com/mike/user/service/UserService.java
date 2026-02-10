@@ -8,6 +8,9 @@ import com.mike.user.dto.CreateUserRequest;
 import com.mike.user.dto.UpdateUserRequest;
 import com.mike.user.dto.UserResponse;
 import com.mike.user.event.UserCreatedEvent;
+import com.mike.user.exception.EventSerializationException;
+import com.mike.user.exception.UserAlreadyExistsException;
+import com.mike.user.exception.UserNotFoundException;
 import com.mike.user.outbox.OutboxEvent;
 import com.mike.user.outbox.OutboxRepository;
 import com.mike.user.repository.IdempotentRepository;
@@ -19,7 +22,6 @@ import org.slf4j.MDC;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.NoSuchElementException;
 import java.util.UUID;
 
 @Service
@@ -50,7 +52,7 @@ public class UserService {
     private UserResponse createInternal(CreateUserRequest request, String key) {
 
         if (userRepository.existsByEmail(request.email())) {
-            throw new IllegalArgumentException("Email already exists");
+            throw new UserAlreadyExistsException(request.email());
         }
 
         UUID userId = UUID.randomUUID();
@@ -92,7 +94,7 @@ public class UserService {
         try {
             return objectMapper.valueToTree(event);
         } catch (Exception e) {
-            throw new RuntimeException("Failed to serialize event", e);
+            throw new EventSerializationException(event.getClass().getSimpleName(), e);
         }
     }
 
@@ -101,19 +103,19 @@ public class UserService {
         return userRepository.findById(id)
                 .filter(u -> !u.isDeleted())
                 .map(this::map)
-                .orElseThrow(() -> new NoSuchElementException("User not found"));
+                .orElseThrow(() -> new UserNotFoundException(id));
     }
 
     @Transactional(readOnly = true)
     public UserResponse getByEmail(String email) {
         return userRepository.findByEmailAndDeletedFalse(email)
                 .map(this::map)
-                .orElseThrow();
+                .orElseThrow(() -> new UserNotFoundException(email));
     }
 
     @Transactional
     public UserResponse update(UUID id, UpdateUserRequest request) {
-        User user = userRepository.findById(id).orElseThrow();
+        User user = userRepository.findById(id).orElseThrow(() -> new UserNotFoundException(id));
         user.update(request.username());
         log.info("User updated | userId={}", id);
         return map(user);
@@ -121,7 +123,7 @@ public class UserService {
 
     @Transactional
     public void delete(UUID id) {
-        User user = userRepository.findById(id).orElseThrow();
+        User user = userRepository.findById(id).orElseThrow(() -> new UserNotFoundException(id));
         user.softDelete();
         log.info("User deleted | userId={}", id);
     }

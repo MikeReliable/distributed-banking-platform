@@ -1,7 +1,9 @@
-package com.mike.card.error;
+package com.mike.auth.error;
 
-import com.mike.card.common.ApiError;
-import com.mike.card.common.ApiException;
+import com.mike.auth.common.ApiError;
+import com.mike.auth.common.ApiException;
+import com.mike.auth.exception.AuthForbiddenException;
+import com.mike.auth.exception.InvalidCredentialsException;
 import jakarta.servlet.http.HttpServletRequest;
 import org.hibernate.exception.ConstraintViolationException;
 import org.slf4j.Logger;
@@ -21,6 +23,46 @@ public class GlobalExceptionHandler {
     private static final Logger log =
             LoggerFactory.getLogger(GlobalExceptionHandler.class);
 
+    @ExceptionHandler(InvalidCredentialsException.class)
+    public ResponseEntity<ApiError> handleInvalidCredentials(InvalidCredentialsException ex,
+                                                             HttpServletRequest request) {
+        log.warn(
+                "[requestId={}] Unauthorized | path={} | msg={}",
+                resolveRequestId(),
+                request.getRequestURI(),
+                ex.getMessage()
+        );
+
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                .body(buildError(
+                        ErrorType.UNAUTHORIZED.name(),
+                        "Unauthorized",
+                        HttpStatus.UNAUTHORIZED.value(),
+                        ex.getMessage(),
+                        request
+                ));
+    }
+
+    @ExceptionHandler(AuthForbiddenException.class)
+    public ResponseEntity<ApiError> handleForbidden(AuthForbiddenException ex,
+                                                    HttpServletRequest request) {
+        log.warn(
+                "[requestId={}] Forbidden | path={} | msg={}",
+                resolveRequestId(),
+                request.getRequestURI(),
+                ex.getMessage()
+        );
+
+        return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                .body(buildError(
+                        ErrorType.FORBIDDEN.name(),
+                        "Forbidden",
+                        HttpStatus.FORBIDDEN.value(),
+                        ex.getMessage(),
+                        request
+                ));
+    }
+
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<ApiError> handleValidation(
             MethodArgumentNotValidException ex,
@@ -34,8 +76,7 @@ public class GlobalExceptionHandler {
                 .orElse("Validation failed");
 
         log.warn(
-                "[requestId={}] Validation error | path={} | detail={}",
-                resolveRequestId(),
+                "Validation error | path={} | detail={}",
                 request.getRequestURI(),
                 detail
         );
@@ -71,8 +112,7 @@ public class GlobalExceptionHandler {
             HttpServletRequest request
     ) {
         log.error(
-                "[requestId={}] Unexpected error | path={}",
-                resolveRequestId(),
+                "Unexpected error | path={}",
                 request.getRequestURI(),
                 ex
         );
@@ -87,18 +127,30 @@ public class GlobalExceptionHandler {
                 ));
     }
 
+    @ExceptionHandler(MethodArgumentNotValidException.class)
+    public ResponseEntity<ApiError> handleMethodArgumentNotValid(
+            MethodArgumentNotValidException ex,
+            HttpServletRequest request
+    ) {
+        String detail = ex.getBindingResult()
+                .getFieldErrors()
+                .stream()
+                .map(err -> err.getField() + ": " + err.getDefaultMessage())
+                .findFirst()
+                .orElse("Validation failed");
+
+        return badRequest(
+                ErrorType.VALIDATION_ERROR.name(),
+                detail,
+                request
+        );
+    }
+
     @ExceptionHandler(ConstraintViolationException.class)
     public ResponseEntity<ApiError> handleConstraintViolation(
             ConstraintViolationException ex,
             HttpServletRequest request
     ) {
-        log.warn(
-                "[requestId={}] Validation error | path={} | msg={}",
-                resolveRequestId(),
-                request.getRequestURI(),
-                ex.getMessage()
-        );
-
         return badRequest(
                 ErrorType.VALIDATION_ERROR.name(),
                 ex.getMessage(),

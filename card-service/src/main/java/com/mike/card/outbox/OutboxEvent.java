@@ -40,7 +40,13 @@ public class OutboxEvent {
     private Instant createdAt;
 
     @Column(nullable = false)
-    private boolean published;
+    private boolean published = false;
+
+    @Column(name = "retry_count", nullable = false)
+    private int retryCount;
+
+    @Column(name = "last_error", length = 1000)
+    private String lastError;
 
     protected OutboxEvent() {
     }
@@ -65,6 +71,11 @@ public class OutboxEvent {
 
     public void markPublished() {
         this.published = true;
+    }
+
+    public void markFailed(String error) {
+        this.retryCount++;
+        this.lastError = error;
     }
 }
 

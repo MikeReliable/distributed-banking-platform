@@ -1,7 +1,8 @@
-package com.mike.card.error;
+package com.mike.user.error;
 
-import com.mike.card.common.ApiError;
-import com.mike.card.common.ApiException;
+import com.mike.user.common.ApiError;
+import com.mike.user.common.ApiException;
+import com.mike.user.exception.UserNotFoundException;
 import jakarta.servlet.http.HttpServletRequest;
 import org.hibernate.exception.ConstraintViolationException;
 import org.slf4j.Logger;
@@ -20,6 +21,29 @@ public class GlobalExceptionHandler {
 
     private static final Logger log =
             LoggerFactory.getLogger(GlobalExceptionHandler.class);
+
+    @ExceptionHandler(UserNotFoundException.class)
+    public ResponseEntity<ApiError> handleUserNotFound(
+            UserNotFoundException ex,
+            HttpServletRequest request
+    ) {
+        log.warn(
+                "[requestId={}] User not found | path={} | msg={}",
+                resolveRequestId(),
+                request.getRequestURI(),
+                ex.getMessage()
+        );
+
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(
+                buildError(
+                        ErrorType.USER_NOT_FOUND.name(),
+                        "Not Found",
+                        HttpStatus.NOT_FOUND.value(),
+                        ex.getMessage(),
+                        request
+                )
+        );
+    }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<ApiError> handleValidation(

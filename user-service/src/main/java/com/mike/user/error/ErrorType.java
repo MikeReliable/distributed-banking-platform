@@ -1,9 +1,9 @@
-package com.mike.card.error;
+package com.mike.user.error;
 
 public enum ErrorType {
     EVENT_SERIALIZATION_ERROR,
-    CARD_NOT_FOUND,
-    CARD_BLOCKED,
+    USER_NOT_FOUND,
+    USER_ALREADY_EXISTS,
     VALIDATION_ERROR,
     UNAUTHORIZED,
     INTERNAL_ERROR

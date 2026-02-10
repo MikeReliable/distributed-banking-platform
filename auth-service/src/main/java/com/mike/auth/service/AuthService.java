@@ -1,9 +1,14 @@
 package com.mike.auth.service;
 
-import com.mike.auth.domain.*;
-import com.mike.auth.dto.*;
+import com.mike.auth.domain.Role;
+import com.mike.auth.domain.UserCredentials;
+import com.mike.auth.dto.LoginRequest;
+import com.mike.auth.dto.LoginResponse;
+import com.mike.auth.dto.RegisterRequest;
+import com.mike.auth.exception.InvalidCredentialsException;
 import com.mike.auth.repository.UserCredentialsRepository;
-import org.springframework.security.authentication.*;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -27,6 +32,11 @@ public class AuthService {
     }
 
     public void register(RegisterRequest request) {
+        repository.findByUsername(request.username())
+                .ifPresent(u -> {
+                    throw new InvalidCredentialsException("User already exists");
+                });
+
         UserCredentials user = new UserCredentials(
                 request.username(),
                 passwordEncoder.encode(request.password()),
@@ -36,15 +46,15 @@ public class AuthService {
     }
 
     public LoginResponse login(LoginRequest request) {
+        UserCredentials user = repository.findByUsername(request.username())
+                .orElseThrow(() -> new InvalidCredentialsException("Invalid username or password"));
+
         authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(
                         request.username(),
                         request.password()
                 )
         );
-
-        UserCredentials user = repository.findByUsername(request.username())
-                .orElseThrow();
 
         String token = jwtService.generateToken(user.getId(), user.getRole());
         return new LoginResponse(token);

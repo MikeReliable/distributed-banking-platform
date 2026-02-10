@@ -4,6 +4,8 @@ import com.mike.transfer.client.CardClient;
 import com.mike.transfer.domain.Account;
 import com.mike.transfer.dto.CardDto;
 import com.mike.transfer.dto.LinkAccountRequest;
+import com.mike.transfer.exception.CardBlockedException;
+import com.mike.transfer.exception.CardNotFoundException;
 import com.mike.transfer.repository.AccountRepository;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
@@ -28,10 +30,10 @@ public class CardResolverService {
         CardDto card = cardClient.getCard(cardId);
 
         if (card == null)
-            throw new NoSuchElementException("Card not found");
+            throw new CardNotFoundException(cardId.toString());
 
         if (!card.isActive())
-            throw new IllegalStateException("Card is not active");
+            throw new CardBlockedException(cardId);
 
         return card.accountId();
     }

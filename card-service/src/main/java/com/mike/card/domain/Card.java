@@ -1,5 +1,6 @@
 package com.mike.card.domain;
 
+import com.mike.card.exception.CardBlockedException;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
@@ -61,7 +62,7 @@ public class Card {
 
     public void block() {
         if (status == CardStatus.CLOSED)
-            throw new IllegalStateException("Card closed");
+            throw new CardBlockedException(this.getId());
         status = CardStatus.BLOCKED;
     }
 

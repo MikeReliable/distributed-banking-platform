@@ -7,7 +7,9 @@ import com.mike.card.domain.CardStatus;
 import com.mike.card.domain.CardType;
 import com.mike.card.domain.Currency;
 import com.mike.card.dto.CardResponse;
+import com.mike.card.exception.CardNotFoundException;
 import com.mike.card.event.CardCreatedEvent;
+import com.mike.card.exception.EventSerializationException;
 import com.mike.card.outbox.OutboxEvent;
 import com.mike.card.outbox.OutboxRepository;
 import com.mike.card.repository.CardRepository;
@@ -20,7 +22,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
-import java.util.NoSuchElementException;
 import java.util.UUID;
 
 @Service
@@ -85,20 +86,20 @@ public class CardService {
     public CardResponse getById(UUID cardId) {
         return cardRepository.findById(cardId)
                 .map(CardResponse::from)
-                .orElseThrow(() -> new NoSuchElementException("Card not found"));
+                .orElseThrow(() -> new CardNotFoundException(cardId));
     }
 
     @Transactional
     public void block(UUID id) {
         Card card = cardRepository.findById(id)
-                .orElseThrow(() -> new NoSuchElementException("Card not found"));
+                .orElseThrow(() -> new CardNotFoundException(id));
         card.block();
     }
 
     @Transactional
     public void close(UUID id) {
         Card card = cardRepository.findById(id)
-                .orElseThrow(() -> new NoSuchElementException("Card not found"));
+                .orElseThrow(() -> new CardNotFoundException(id));
         card.close();
     }
 
@@ -120,14 +121,14 @@ public class CardService {
         try {
             return objectMapper.valueToTree(event);
         } catch (Exception e) {
-            throw new RuntimeException("Failed to serialize event", e);
+            throw new EventSerializationException(event.getClass().getSimpleName(), e);
         }
     }
 
     @Transactional
     public void linkAccount(UUID cardId, UUID accountId) {
         Card card = cardRepository.findById(cardId)
-                .orElseThrow(() -> new NoSuchElementException("Card not found"));
+                .orElseThrow(() -> new CardNotFoundException(cardId));
 
         if (accountId.equals(card.getAccountId())) {
             return;

@@ -1,5 +1,7 @@
 package com.mike.transfer.domain;
 
+import com.mike.transfer.exception.InsufficientFundsException;
+import com.mike.transfer.exception.InvalidAmountException;
 import jakarta.persistence.*;
 import lombok.Getter;
 import org.springframework.data.annotation.Version;
@@ -51,14 +53,14 @@ public class Account {
         validateAmount(amount);
         BigDecimal normalized = Money.normalize(amount);
         if (balance.compareTo(normalized) < 0) {
-            throw new IllegalStateException("Insufficient funds");
+            throw new InsufficientFundsException();
         }
         balance = Money.normalize(balance.subtract(amount));
     }
 
     private void validateAmount(BigDecimal amount) {
         if (amount == null || amount.signum() <= 0)
-            throw new IllegalArgumentException("Amount must be positive");
+            throw new InvalidAmountException();
     }
 }
 

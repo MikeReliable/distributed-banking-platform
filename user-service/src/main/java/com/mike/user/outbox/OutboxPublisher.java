@@ -21,6 +21,8 @@ public class OutboxPublisher {
     private final KafkaTemplate<String, String> kafkaTemplate;
     private final ObjectMapper objectMapper;
 
+    private static final int MAX_RETRIES = 10;
+
     public OutboxPublisher(
             OutboxRepository outboxRepository,
             KafkaTemplate<String, String> kafkaTemplate,
@@ -36,7 +38,7 @@ public class OutboxPublisher {
     public void publish() {
 
         var events = outboxRepository
-                .findTop10ByPublishedFalseOrderByCreatedAt();
+                .findTop10ByPublishedFalseAndRetryCountLessThanOrderByCreatedAt(MAX_RETRIES);
 
         for (OutboxEvent event : events) {
             try {
@@ -55,7 +57,7 @@ public class OutboxPublisher {
                             event.getRequestId().getBytes(StandardCharsets.UTF_8)
                     );
                 }
-                kafkaTemplate.send(record);
+                kafkaTemplate.send(record).get();
 
                 event.markPublished();
                 log.info(
@@ -70,6 +72,7 @@ public class OutboxPublisher {
                         event.getType(),
                         e
                 );
+                event.markFailed(e.getMessage());
             }
         }
     }
