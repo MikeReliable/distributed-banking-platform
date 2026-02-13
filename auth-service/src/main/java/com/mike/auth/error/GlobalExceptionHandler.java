@@ -63,27 +63,6 @@ public class GlobalExceptionHandler {
                 ));
     }
 
-    @ExceptionHandler(MethodArgumentNotValidException.class)
-    public ResponseEntity<ApiError> handleValidation(
-            MethodArgumentNotValidException ex,
-            HttpServletRequest request
-    ) {
-        String detail = ex.getBindingResult()
-                .getFieldErrors()
-                .stream()
-                .map(err -> err.getField() + ": " + err.getDefaultMessage())
-                .findFirst()
-                .orElse("Validation failed");
-
-        log.warn(
-                "Validation error | path={} | detail={}",
-                request.getRequestURI(),
-                detail
-        );
-
-        return badRequest(ErrorType.VALIDATION_ERROR.name(), detail, request);
-    }
-
     @ExceptionHandler(ApiException.class)
     public ResponseEntity<ApiError> handleApiException(
             ApiException ex,
