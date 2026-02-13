@@ -96,9 +96,9 @@ public class UserController {
         return userService.update(id, request);
     }
 
-    @Operation(summary = "Delete user")
+    @Operation(summary = "Block user")
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "204", description = "User deleted successfully (no content)"),
+            @ApiResponse(responseCode = "204", description = "User blocked successfully (no content)"),
             @ApiResponse(responseCode = "404", description = "User not found",
                     content = @Content(mediaType = "application/json", schema = @Schema(implementation = ApiError.class))),
             @ApiResponse(responseCode = "500", description = "Internal server error",
@@ -106,7 +106,7 @@ public class UserController {
     })
     @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void delete(@PathVariable UUID id) {
-        userService.delete(id);
+    public void block(@PathVariable UUID id) {
+        userService.block(id);
     }
 }

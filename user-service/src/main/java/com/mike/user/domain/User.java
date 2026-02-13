@@ -29,7 +29,7 @@ public class User {
     private UserStatus status;
 
     @Column(nullable = false)
-    private boolean deleted;
+    private boolean blocked;
 
     protected User() {}
 
@@ -38,15 +38,15 @@ public class User {
         this.username = username;
         this.email = email;
         this.status = UserStatus.ACTIVE;
-        this.deleted = false;
+        this.blocked = false;
     }
 
     public void update(String username) {
         this.username = username;
     }
 
-    public void softDelete() {
-        this.deleted = true;
-        this.status = UserStatus.DELETED;
+    public void userBlock() {
+        this.blocked = true;
+        this.status = UserStatus.BLOCKED;
     }
 }

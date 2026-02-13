@@ -36,7 +36,7 @@ databaseChangeLog:
                   constraints:
                     nullable: false
               - column:
-                  name: deleted
+                  name: blocked
                   type: boolean
                   defaultValueBoolean: false
                   constraints:

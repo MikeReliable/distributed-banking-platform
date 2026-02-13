@@ -101,14 +101,14 @@ public class UserService {
     @Transactional(readOnly = true)
     public UserResponse getById(UUID id) {
         return userRepository.findById(id)
-                .filter(u -> !u.isDeleted())
+                .filter(u -> !u.isBlocked())
                 .map(this::map)
                 .orElseThrow(() -> new UserNotFoundException(id));
     }
 
     @Transactional(readOnly = true)
     public UserResponse getByEmail(String email) {
-        return userRepository.findByEmailAndDeletedFalse(email)
+        return userRepository.findByEmailAndBlockedFalse(email)
                 .map(this::map)
                 .orElseThrow(() -> new UserNotFoundException(email));
     }
@@ -122,10 +122,10 @@ public class UserService {
     }
 
     @Transactional
-    public void delete(UUID id) {
+    public void block(UUID id) {
         User user = userRepository.findById(id).orElseThrow(() -> new UserNotFoundException(id));
-        user.softDelete();
-        log.info("User deleted | userId={}", id);
+        user.userBlock();
+        log.info("User blocked | userId={}", id);
     }
 
     private UserResponse map(User u) {
