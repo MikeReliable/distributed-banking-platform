@@ -46,8 +46,6 @@ public class AuthService {
     }
 
     public LoginResponse login(LoginRequest request) {
-        UserCredentials user = repository.findByUsername(request.username())
-                .orElseThrow(() -> new InvalidCredentialsException("Invalid username or password"));
 
         authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(
@@ -55,6 +53,9 @@ public class AuthService {
                         request.password()
                 )
         );
+
+        UserCredentials user = repository.findByUsername(request.username())
+                .orElseThrow(() -> new InvalidCredentialsException("Invalid username or password"));
 
         String token = jwtService.generateToken(user.getId(), user.getRole());
         return new LoginResponse(token);
