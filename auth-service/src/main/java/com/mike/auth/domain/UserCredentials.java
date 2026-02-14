@@ -1,7 +1,9 @@
 package com.mike.auth.domain;
 
 import jakarta.persistence.*;
+import lombok.Getter;
 
+@Getter
 @Entity
 @Table(name = "users")
 public class UserCredentials {
@@ -26,10 +28,5 @@ public class UserCredentials {
         this.password = password;
         this.role = role;
     }
-
-    public String getId() { return id; }
-    public String getUsername() { return username; }
-    public String getPassword() { return password; }
-    public Role getRole() { return role; }
 }
 

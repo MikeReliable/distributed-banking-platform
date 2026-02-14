@@ -16,7 +16,8 @@ import java.util.UUID;
 @Order(Ordered.HIGHEST_PRECEDENCE)
 public class CorrelationIdFilter implements WebFilter {
 
-    public static final String HEADER = "requestId";
+    public static final String HEADER = "X-Request-Id";
+    public static final String CONTEXT_KEY = "requestId";
 
     @Override
     public @NonNull Mono<Void> filter(@NonNull ServerWebExchange exchange, @NonNull WebFilterChain chain) {
@@ -31,6 +32,6 @@ public class CorrelationIdFilter implements WebFilter {
 
         String finalRequestId = requestId;
         return chain.filter(exchange.mutate().request(request).build())
-                .contextWrite(ctx -> ctx.put(HEADER, finalRequestId));
+                .contextWrite(ctx -> ctx.put(CONTEXT_KEY, finalRequestId));
     }
 }
