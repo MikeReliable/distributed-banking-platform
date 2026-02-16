@@ -1,11 +1,15 @@
 package com.mike.auth.controller;
 
 import com.mike.auth.security.JwtKeyProvider;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import com.mike.auth.service.JwtService;
+import jakarta.servlet.http.HttpServletRequest;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
 
 import java.math.BigInteger;
+import java.nio.charset.StandardCharsets;
 import java.security.interfaces.RSAPublicKey;
 import java.util.Base64;
 import java.util.List;
@@ -16,9 +20,11 @@ import java.util.Map;
 public class JwksController {
 
     private final JwtKeyProvider keyProvider;
+    private final JwtService jwtService;
 
-    public JwksController(JwtKeyProvider keyProvider) {
+    public JwksController(JwtKeyProvider keyProvider, JwtService jwtService) {
         this.keyProvider = keyProvider;
+        this.jwtService = jwtService;
     }
 
     @GetMapping("/jwks")
@@ -47,5 +53,39 @@ public class JwksController {
         }
 
         return Base64.getUrlEncoder().withoutPadding().encodeToString(bytes);
+    }
+
+    @PostMapping(value = "/oauth/token", consumes = MediaType.APPLICATION_FORM_URLENCODED_VALUE)
+    public ResponseEntity<Map<String, String>> token(
+            @RequestParam(value = "client_id", required = false) String clientId,
+            @RequestParam(value = "client_secret", required = false) String clientSecret,
+            @RequestParam("grant_type") String grantType,
+            HttpServletRequest request) {
+        if (!"client_credentials".equals(grantType)) {
+            return ResponseEntity.badRequest().build();
+        }
+
+        if (clientId == null || clientSecret == null) {
+            String authHeader = request.getHeader("Authorization");
+            if (authHeader != null && authHeader.startsWith("Basic ")) {
+                String base64Credentials = authHeader.substring(6);
+                String credentials = new String(Base64.getDecoder().decode(base64Credentials), StandardCharsets.UTF_8);
+                String[] parts = credentials.split(":", 2);
+                if (parts.length == 2) {
+                    clientId = parts[0];
+                    clientSecret = parts[1];
+                }
+            }
+        }
+
+        if (!"transfer-service".equals(clientId) || !"secret".equals(clientSecret)) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+        String token = jwtService.generateServiceToken(clientId);
+        return ResponseEntity.ok(Map.of(
+                "access_token", token,
+                "token_type", "bearer",
+                "expires_in", "3600"
+        ));
     }
 }

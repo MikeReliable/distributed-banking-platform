@@ -9,6 +9,8 @@ services:
       POSTGRES_PASSWORD: auth
     ports:
       - "5432:5432"
+    volumes:
+      - pg-auth-data:/var/lib/postgresql/data
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U auth"]
       interval: 5s
@@ -26,6 +28,8 @@ services:
       POSTGRES_PASSWORD: card
     ports:
       - "5433:5432"
+    volumes:
+      - pg-card-data:/var/lib/postgresql/data
     healthcheck:
       test: [ "CMD-SHELL", "pg_isready -U card" ]
       interval: 5s
@@ -43,6 +47,8 @@ services:
       POSTGRES_PASSWORD: transfer
     ports:
       - "5434:5432"
+    volumes:
+      - pg-transfer-data:/var/lib/postgresql/data
     healthcheck:
       test: [ "CMD-SHELL", "pg_isready -U transfer" ]
       interval: 5s
@@ -60,6 +66,8 @@ services:
       POSTGRES_PASSWORD: user
     ports:
       - "5435:5432"
+    volumes:
+      - pg-user-data:/var/lib/postgresql/data
     healthcheck:
       test: [ "CMD-SHELL", "pg_isready -U user -d userdb" ]
       interval: 5s
@@ -110,6 +118,7 @@ services:
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres-user:5432/userdb
       SPRING_DATASOURCE_USERNAME: user
       SPRING_DATASOURCE_PASSWORD: user
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK_SET_URI: http://auth-service:8081/auth/jwks
     ports:
       - "8082:8082"
     networks:
@@ -129,6 +138,7 @@ services:
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres-card:5432/card
       SPRING_DATASOURCE_USERNAME: card
       SPRING_DATASOURCE_PASSWORD: card
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK_SET_URI: http://auth-service:8081/auth/jwks
       SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:9092
     ports:
       - "8083:8083"
@@ -147,6 +157,7 @@ services:
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres-transfer:5432/transfer
       SPRING_DATASOURCE_USERNAME: transfer
       SPRING_DATASOURCE_PASSWORD: transfer
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK_SET_URI: http://auth-service:8081/auth/jwks
     ports:
       - "8084:8084"
     networks:
@@ -181,6 +192,8 @@ services:
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
       KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
       KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+    volumes:
+      - kafka-data:/var/lib/kafka/data
     healthcheck:
       test: [ "CMD", "bash", "-c", "kafka-topics --bootstrap-server localhost:9092 --list" ]
       interval: 10s
@@ -192,3 +205,10 @@ services:
 networks:
   bank-network:
     driver: bridge
+
+volumes:
+  pg-auth-data:
+  pg-card-data:
+  pg-transfer-data:
+  pg-user-data:
+  kafka-data:

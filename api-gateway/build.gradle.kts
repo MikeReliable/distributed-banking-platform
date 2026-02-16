@@ -1,8 +1,3 @@
-import org.gradle.kotlin.dsl.annotationProcessor
-import org.gradle.kotlin.dsl.compileOnly
-import org.gradle.kotlin.dsl.testAnnotationProcessor
-import org.gradle.kotlin.dsl.testCompileOnly
-
 plugins {
     id("org.springframework.boot")
     id("io.spring.dependency-management")
@@ -10,8 +5,7 @@ plugins {
 }
 
 dependencies {
-    implementation("org.springframework.boot:spring-boot-starter-web")
-
+    implementation("org.springframework.boot:spring-boot-starter-actuator")
     implementation("org.springframework.boot:spring-boot-starter-security")
     implementation("org.springframework.boot:spring-boot-starter-oauth2-resource-server")
 
@@ -19,13 +13,14 @@ dependencies {
     testImplementation("io.projectreactor:reactor-test")
 
     implementation("org.springframework.boot:spring-boot-starter-webflux")
+    implementation("org.springdoc:springdoc-openapi-starter-webflux-ui:2.3.0")
     implementation("org.springframework.cloud:spring-cloud-starter-gateway")
 
-    compileOnly ("org.projectlombok:lombok:1.18.32")
-    annotationProcessor ("org.projectlombok:lombok:1.18.32")
+    compileOnly("org.projectlombok:lombok:1.18.32")
+    annotationProcessor("org.projectlombok:lombok:1.18.32")
 
-    testCompileOnly ("org.projectlombok:lombok:1.18.32")
-    testAnnotationProcessor ("org.projectlombok:lombok:1.18.32")
+    testCompileOnly("org.projectlombok:lombok:1.18.32")
+    testAnnotationProcessor("org.projectlombok:lombok:1.18.32")
 }
 
 dependencyManagement {

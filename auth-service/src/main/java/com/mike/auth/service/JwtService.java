@@ -30,4 +30,16 @@ public class JwtService {
                 .signWith(keyProvider.getKeyPair().getPrivate())
                 .compact();
     }
+
+    public String generateServiceToken(String clientId) {
+        return Jwts.builder()
+                .setHeaderParam("kid", KEY_ID)
+                .setSubject(clientId)
+                .claim("role", Role.SERVICE.name())
+                .setIssuer("auth-service")
+                .setIssuedAt(new Date())
+                .setExpiration(new Date(System.currentTimeMillis() + EXPIRATION_MS))
+                .signWith(keyProvider.getKeyPair().getPrivate())
+                .compact();
+    }
 }

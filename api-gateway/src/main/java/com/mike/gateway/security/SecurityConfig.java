@@ -1,4 +1,4 @@
-package com.mike.gateway.config;
+package com.mike.gateway.security;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -18,8 +18,15 @@ public class SecurityConfig {
         return http
                 .csrf(ServerHttpSecurity.CsrfSpec::disable)
                 .authorizeExchange(ex -> ex
-                        .pathMatchers("/auth/**", "/swagger-ui/**", "/v3/api-docs/**").permitAll()
-                        .pathMatchers("/cards/**").hasRole("USER")
+                        .pathMatchers(
+                                "/auth/**",
+                                "/swagger-ui/**",
+                                "/swagger-ui.html",
+                                "/webjars/swagger-ui/**",
+                                "/v3/api-docs/**",
+                                "/*/swagger-ui/**",
+                                "/*/v3/api-docs/**"
+                        ).permitAll()
                         .anyExchange().authenticated()
                 )
                 .oauth2ResourceServer(oauth -> oauth

@@ -25,28 +25,83 @@ spring:
           max-idle-time: 5000
       default-filters:
         - RemoveRequestHeader=Cookie
+      forwarded:
+        enabled: true
 
       routes:
-        - id: card-service
-          uri: lb://card-service
+        - id: auth
+          uri: http://auth-service:8081
+          predicates:
+            - Path=/auth/**
+          filters:
+            - StripPrefix=1
+
+        - id: users
+          uri: http://user-service:8082
+          predicates:
+            - Path=/users/**
+          filters:
+            - StripPrefix=1
+
+        - id: cards
+          uri: http://card-service:8083
           predicates:
             - Path=/cards/**
           filters:
             - StripPrefix=1
-          metadata:
-            preserve-host: true
 
-        - id: transfer-service
-          uri: lb://transfer-service
+        - id: transfers
+          uri: http://transfer-service:8084
           predicates:
             - Path=/transfers/**
           filters:
             - StripPrefix=1
-          metadata:
-            preserve-host: true
+
+
+        - id: auth-api-docs
+          uri: http://auth-service:8081
+          predicates:
+            - Path=/auth/v3/api-docs
+          filters:
+            - RewritePath=/auth/(?<segment>.*), /$\{segment}
+
+        - id: users-api-docs
+          uri: http://user-service:8082
+          predicates:
+            - Path=/users/v3/api-docs
+          filters:
+            - RewritePath=/users/(?<segment>.*), /$\{segment}
+
+        - id: cards-api-docs
+          uri: http://card-service:8083
+          predicates:
+            - Path=/cards/v3/api-docs
+          filters:
+            - RewritePath=/cards/(?<segment>.*), /$\{segment}
+
+        - id: transfers-api-docs
+          uri: http://transfer-service:8084
+          predicates:
+            - Path=/transfers/v3/api-docs
+          filters:
+            - RewritePath=/transfers/(?<segment>.*), /$\{segment}
 
 logging:
   level:
     root: INFO
     org.springframework.cloud.gateway: INFO
     reactor.netty.http.client: WARN
+
+springdoc:
+  swagger-ui:
+    urls:
+      - name: auth
+        url: /auth/v3/api-docs
+      - name: users
+        url: /users/v3/api-docs
+      - name: cards
+        url: /cards/v3/api-docs
+      - name: transfers
+        url: /transfers/v3/api-docs
+    disable-swagger-default-url: true
+    path: /swagger-ui.html

@@ -27,7 +27,7 @@ public class CardController {
 
     private final CardService service;
 
-    @Operation(summary = "Get user cards")
+    @Operation(summary = "Get cards  by user id")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Cards found",
                     content = @Content(mediaType = "application/json", array = @ArraySchema(schema = @Schema(implementation = CardResponse.class)))),
@@ -36,8 +36,8 @@ public class CardController {
             @ApiResponse(responseCode = "500", description = "Internal server error",
                     content = @Content(mediaType = "application/json", schema = @Schema(implementation = ApiError.class)))
     })
-    @GetMapping
-    public List<CardResponse> myCards(@RequestHeader("X-User-Id") UUID userId) {
+    @GetMapping("/{userId}/user")
+    public List<CardResponse> myCards(@PathVariable UUID userId) {
         return service.getCardsForUser(userId);
     }
 

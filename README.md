@@ -126,17 +126,6 @@ Start infrastructure and services:
 ```sh
 docker-compose up --build
 ```
-### Swagger Endpoints
+### Swagger Endpoint
 
-* Auth Service:
-
-[http://localhost:8081/swagger-ui/index.html](http://localhost:8081/swagger-ui/index.html)
-* User Service:
-  
-[http://localhost:8082/swagger-ui/index.html](http://localhost:8082/swagger-ui/index.html)
-* Card Service:
-  
-[http://localhost:8083/swagger-ui/index.html](http://localhost:8083/swagger-ui/index.html)
-* Transfer Service:
-  
-[http://localhost:8084/swagger-ui/index.html](http://localhost:8084/swagger-ui/index.html)
+[http://localhost:8080/swagger-ui.html](http://localhost:8080/swagger-ui.html)
