@@ -1,6 +1,6 @@
-package com.mike.transfer.kafka;
+package com.mike.auth.kafka;
 
-import com.mike.transfer.dto.CardCreatedEvent;
+import com.mike.auth.dto.UserBlockedEvent;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -17,15 +17,15 @@ public class KafkaConsumerConfig {
 
     private static final Logger log = LoggerFactory.getLogger(KafkaConsumerConfig.class);
 
-    private final ConsumerFactory<String, CardCreatedEvent> consumerFactory;
+    private final ConsumerFactory<String, UserBlockedEvent> consumerFactory;
 
-    public KafkaConsumerConfig(ConsumerFactory<String, CardCreatedEvent> consumerFactory) {
+    public KafkaConsumerConfig(ConsumerFactory<String, UserBlockedEvent> consumerFactory) {
         this.consumerFactory = consumerFactory;
     }
 
     @Bean
-    public ConcurrentKafkaListenerContainerFactory<String, CardCreatedEvent> kafkaListenerContainerFactory() {
-        var factory = new ConcurrentKafkaListenerContainerFactory<String, CardCreatedEvent>();
+    public ConcurrentKafkaListenerContainerFactory<String, UserBlockedEvent> kafkaListenerContainerFactory() {
+        var factory = new ConcurrentKafkaListenerContainerFactory<String, UserBlockedEvent>();
         factory.setConsumerFactory(consumerFactory);
         factory.setCommonErrorHandler(kafkaErrorHandler());
         return factory;

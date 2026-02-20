@@ -6,6 +6,8 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import lombok.Getter;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 
 import java.math.BigDecimal;
 import java.time.Instant;
@@ -17,6 +19,7 @@ import java.util.UUID;
 public class Transfer {
 
     @Id
+    @JdbcTypeCode(SqlTypes.UUID)
     private UUID id;
 
     @Column(name = "from_account", nullable = false)

@@ -1,5 +1,6 @@
 package com.mike.auth.security;
 
+import com.mike.auth.exception.UserNotFoundException;
 import com.mike.auth.repository.UserCredentialsRepository;
 import org.springframework.security.core.userdetails.*;
 import org.springframework.stereotype.Service;
@@ -14,10 +15,10 @@ public class UserDetailsServiceImpl implements UserDetailsService {
     }
 
     @Override
-    public UserDetails loadUserByUsername(String username)
-            throws UsernameNotFoundException {
+    public UserDetails loadUserByUsername(String email)
+            throws UserNotFoundException {
 
-        return repository.findByUsername(username)
+        return repository.findByEmail(email)
                 .map(user -> User.builder()
                         .username(user.getUsername())
                         .password(user.getPassword())

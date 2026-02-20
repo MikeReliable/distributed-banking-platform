@@ -8,7 +8,7 @@ import com.mike.card.domain.CardType;
 import com.mike.card.domain.Currency;
 import com.mike.card.dto.CardResponse;
 import com.mike.card.exception.CardNotFoundException;
-import com.mike.card.event.CardCreatedEvent;
+import com.mike.card.dto.CardCreateEvent;
 import com.mike.card.exception.EventSerializationException;
 import com.mike.card.outbox.OutboxEvent;
 import com.mike.card.outbox.OutboxRepository;
@@ -104,7 +104,7 @@ public class CardService {
     }
 
     public void resolveAccountId(UUID userId) {
-        CardCreatedEvent event = new CardCreatedEvent(userId.toString());
+        CardCreateEvent event = new CardCreateEvent(userId.toString());
 
         OutboxEvent outbox = new OutboxEvent(
                 UUID.randomUUID(),

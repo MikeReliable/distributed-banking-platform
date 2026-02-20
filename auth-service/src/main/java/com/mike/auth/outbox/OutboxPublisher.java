@@ -1,8 +1,7 @@
-package com.mike.user.outbox;
+package com.mike.auth.outbox;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import com.mike.user.domain.OutboxEventTopic;
 import org.apache.kafka.clients.producer.ProducerRecord;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -48,10 +47,9 @@ public class OutboxPublisher {
                 root.put("aggregateId", event.getAggregateId());
                 root.set("payload", event.getPayload());
 
-                String topic = OutboxEventTopic.fromType(event.getType()).getTopicName();
                 String payload = objectMapper.writeValueAsString(root);
                 ProducerRecord<String, String> record =
-                        new ProducerRecord<>(topic, event.getAggregateId(), payload);
+                        new ProducerRecord<>("registered-events", event.getAggregateId(), payload);
 
                 if (event.getRequestId() != null) {
                     record.headers().add(

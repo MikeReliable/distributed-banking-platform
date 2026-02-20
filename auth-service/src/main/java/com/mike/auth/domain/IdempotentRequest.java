@@ -1,4 +1,4 @@
-package com.mike.user.domain;
+package com.mike.auth.domain;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;

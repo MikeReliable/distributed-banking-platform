@@ -3,7 +3,7 @@ package com.mike.card.kafka;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.mike.card.event.UserCreatedEvent;
+import com.mike.card.dto.UserCreateEvent;
 import com.mike.card.service.CardService;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
@@ -25,7 +25,7 @@ public class UserCreatedConsumer {
     private final CardService cardService;
     private final ObjectMapper objectMapper;
 
-    @KafkaListener(topics = "user-events", groupId = "card-service-group")
+    @KafkaListener(topics = "created-events", groupId = "card-service-group")
     public void listen(
             @Payload String message,
             @Header(name = "X-Request-Id", required = false) String requestId
@@ -52,8 +52,8 @@ public class UserCreatedConsumer {
                 return;
             }
 
-            UserCreatedEvent event =
-                    objectMapper.treeToValue(root.get("payload"), UserCreatedEvent.class);
+            UserCreateEvent event =
+                    objectMapper.treeToValue(root.get("payload"), UserCreateEvent.class);
 
             if (requestId == null) {
                 requestId = "kafka-" + UUID.randomUUID();

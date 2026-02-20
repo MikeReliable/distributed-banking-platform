@@ -2,18 +2,17 @@ package com.mike.user.service;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.mike.user.domain.IdempotentRequest;
+import com.mike.user.domain.OutboxEventTopic;
 import com.mike.user.domain.User;
-import com.mike.user.dto.CreateUserRequest;
-import com.mike.user.dto.UpdateUserRequest;
+import com.mike.user.dto.UserCreateEvent;
+import com.mike.user.dto.UserRegisteredEvent;
 import com.mike.user.dto.UserResponse;
-import com.mike.user.event.UserCreatedEvent;
+import com.mike.user.dto.UserUpdateRequest;
 import com.mike.user.exception.EventSerializationException;
 import com.mike.user.exception.UserAlreadyExistsException;
 import com.mike.user.exception.UserNotFoundException;
 import com.mike.user.outbox.OutboxEvent;
 import com.mike.user.outbox.OutboxRepository;
-import com.mike.user.repository.IdempotentRepository;
 import com.mike.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
@@ -22,6 +21,7 @@ import org.slf4j.MDC;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Map;
 import java.util.UUID;
 
 @Service
@@ -33,50 +33,30 @@ public class UserService {
     private final UserRepository userRepository;
     private final OutboxRepository outboxRepository;
     private final ObjectMapper objectMapper;
-    private final IdempotentRepository idempotentRepository;
 
     @Transactional
-    public UserResponse createUser(CreateUserRequest request, String idempotencyKey) {
-
-        if (idempotencyKey != null) {
-            return idempotentRepository.findById(idempotencyKey)
-                    .map(IdempotentRequest::getEntityId)
-                    .flatMap(userRepository::findById)
-                    .map(this::map)
-                    .orElseGet(() -> createInternal(request, idempotencyKey));
-        }
-
-        return createInternal(request, null);
-    }
-
-    private UserResponse createInternal(CreateUserRequest request, String key) {
+    public void createUser(UserRegisteredEvent request) {
 
         if (userRepository.existsByEmail(request.email())) {
             throw new UserAlreadyExistsException(request.email());
         }
 
-        UUID userId = UUID.randomUUID();
-
         User user = new User(
-                userId,
+                request.userId(),
                 request.username(),
                 request.email()
         );
 
         userRepository.save(user);
 
-        if (key != null) {
-            idempotentRepository.save(new IdempotentRequest(key, userId));
-        }
-
-        UserCreatedEvent event = new UserCreatedEvent(userId.toString());
+        UserCreateEvent event = new UserCreateEvent(request.userId().toString());
 
         OutboxEvent outbox = new OutboxEvent(
                 UUID.randomUUID(),
                 "User",
-                userId.toString(),
+                request.userId().toString(),
                 MDC.get("requestId"),
-                "USER_CREATED",
+                OutboxEventTopic.USER_CREATED.toString(),
                 toJson(event)
         );
 
@@ -84,10 +64,8 @@ public class UserService {
 
         log.info(
                 "User created | userId={} | email={}",
-                userId, request.email()
+                request.userId(), request.email()
         );
-
-        return map(user);
     }
 
     private JsonNode toJson(Object event) {
@@ -101,7 +79,6 @@ public class UserService {
     @Transactional(readOnly = true)
     public UserResponse getById(UUID id) {
         return userRepository.findById(id)
-                .filter(u -> !u.isBlocked())
                 .map(this::map)
                 .orElseThrow(() -> new UserNotFoundException(id));
     }
@@ -114,8 +91,12 @@ public class UserService {
     }
 
     @Transactional
-    public UserResponse update(UUID id, UpdateUserRequest request) {
+    public UserResponse update(UUID id, UserUpdateRequest request) {
         User user = userRepository.findById(id).orElseThrow(() -> new UserNotFoundException(id));
+        if (user.isBlocked()) {
+            log.warn("User blocked | userId={}", user.getId());
+            throw new UserNotFoundException(user.getId());
+        }
         user.update(request.username());
         log.info("User updated | userId={}", id);
         return map(user);
@@ -125,6 +106,17 @@ public class UserService {
     public void block(UUID id) {
         User user = userRepository.findById(id).orElseThrow(() -> new UserNotFoundException(id));
         user.userBlock();
+        userRepository.save(user);
+
+        OutboxEvent outbox = new OutboxEvent(
+                UUID.randomUUID(),
+                "User",
+                id.toString(),
+                MDC.get("requestId"),
+                OutboxEventTopic.USER_BLOCKED.toString(),
+                objectMapper.valueToTree(Map.of("userId", id.toString()))
+        );
+        outboxRepository.save(outbox);
         log.info("User blocked | userId={}", id);
     }
 

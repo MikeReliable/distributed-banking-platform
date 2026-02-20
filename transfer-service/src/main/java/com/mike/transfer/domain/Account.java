@@ -4,6 +4,8 @@ import com.mike.transfer.exception.InsufficientFundsException;
 import com.mike.transfer.exception.InvalidAmountException;
 import jakarta.persistence.*;
 import lombok.Getter;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 import org.springframework.data.annotation.Version;
 
 import java.math.BigDecimal;
@@ -16,6 +18,7 @@ import java.util.UUID;
 public class Account {
 
     @Id
+    @JdbcTypeCode(SqlTypes.UUID)
     private UUID id;
 
     @Column(name = "user_id", nullable = false)

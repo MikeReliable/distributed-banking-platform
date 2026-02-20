@@ -1,10 +1,10 @@
-package com.mike.transfer.kafka;
+package com.mike.user.kafka;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.mike.transfer.dto.CardCreatedEvent;
-import com.mike.transfer.service.TransferService;
+import com.mike.user.dto.UserRegisteredEvent;
+import com.mike.user.service.UserService;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -18,14 +18,14 @@ import java.util.UUID;
 
 @Component
 @RequiredArgsConstructor
-public class CardCreatedConsumer {
+public class UserRegisteredConsumer {
 
-    private static final Logger log = LoggerFactory.getLogger(CardCreatedConsumer.class);
+    private static final Logger log = LoggerFactory.getLogger(UserRegisteredConsumer.class);
 
-    private final TransferService transferService;
+    private final UserService userService;
     private final ObjectMapper objectMapper;
 
-    @KafkaListener(topics = "card-events", groupId = "transfer-service-group")
+    @KafkaListener(topics = "registered-events", groupId = "user-service-group")
     public void listen(
             @Payload String message,
             @Header(name = "X-Request-Id", required = false) String requestId
@@ -47,13 +47,13 @@ public class CardCreatedConsumer {
                 return;
             }
 
-            if (!"CARD_CREATED".equals(root.get("type").asText())) {
+            if (!"USER_REGISTERED".equals(root.get("type").asText())) {
                 log.debug("Kafka event ignored | type={}", root.get("type").asText());
                 return;
             }
 
-            CardCreatedEvent event =
-                    objectMapper.treeToValue(root.get("payload"), CardCreatedEvent.class);
+            UserRegisteredEvent event =
+                    objectMapper.treeToValue(root.get("payload"), UserRegisteredEvent.class);
 
             if (requestId == null) {
                 requestId = "kafka-" + UUID.randomUUID();
@@ -61,13 +61,13 @@ public class CardCreatedConsumer {
             MDC.put("requestId", requestId);
 
             if (event.userId() == null) {
-                log.warn("CARD_CREATED without userId");
+                log.warn("USER_REGISTERED without userId");
                 return;
             }
 
-            log.info("CARD_CREATED event received | userId={}", event.userId());
-            transferService.createDefaultAccounts(UUID.fromString(event.userId()));
-            log.info("CARD_CREATED event processed | userId={}", event.userId());
+            log.info("USER_REGISTERED event received | userId={}", event.userId());
+            userService.createUser(event);
+            log.info("USER_REGISTERED event processed | userId={}", event.userId());
 
         } catch (Exception e) {
             log.error("Kafka event processing failed", e);

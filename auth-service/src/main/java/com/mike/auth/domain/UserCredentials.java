@@ -2,6 +2,10 @@ package com.mike.auth.domain;
 
 import jakarta.persistence.*;
 import lombok.Getter;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
+
+import java.util.UUID;
 
 @Getter
 @Entity
@@ -9,11 +13,14 @@ import lombok.Getter;
 public class UserCredentials {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.UUID)
-    private String id;
+    @JdbcTypeCode(SqlTypes.UUID)
+    private UUID id;
+
+    @Column(nullable = false)
+    private String username;
 
     @Column(nullable = false, unique = true)
-    private String username;
+    private String email;
 
     @Column(nullable = false)
     private String password;
@@ -21,12 +28,22 @@ public class UserCredentials {
     @Enumerated(EnumType.STRING)
     private Role role;
 
-    protected UserCredentials() {}
+    @Column(nullable = false)
+    private boolean blocked = false;
 
-    public UserCredentials(String username, String password, Role role) {
+    protected UserCredentials() {
+    }
+
+    public UserCredentials(UUID id, String username, String email, String password, Role role) {
+        this.id = id;
         this.username = username;
+        this.email = email;
         this.password = password;
         this.role = role;
+        this.blocked = false;
+    }
+
+    public void block() {
+        this.blocked = true;
     }
 }
-

@@ -1,9 +1,9 @@
 package com.mike.user.controller;
 
 import com.mike.user.common.ApiError;
-import com.mike.user.dto.CreateUserRequest;
-import com.mike.user.dto.UpdateUserRequest;
+import com.mike.user.dto.UserRegisteredEvent;
 import com.mike.user.dto.UserResponse;
+import com.mike.user.dto.UserUpdateRequest;
 import com.mike.user.service.UserService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -13,7 +13,6 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.UUID;
@@ -38,13 +37,11 @@ public class UserController {
             @ApiResponse(responseCode = "500", description = "Internal server error",
                     content = @Content(mediaType = "application/json", schema = @Schema(implementation = ApiError.class)))
     })
-    @PostMapping
-    public ResponseEntity<UserResponse> createUser(
-            @RequestHeader(value = "Idempotency-Key", required = false) String key,
-            @Valid @RequestBody CreateUserRequest request
+//    @PostMapping
+    public void createUser(
+            @Valid @RequestBody UserRegisteredEvent request
     ) {
-        UserResponse response = userService.createUser(request, key);
-        return ResponseEntity.status(HttpStatus.CREATED).body(response);
+        userService.createUser(request);
     }
 
     @Operation(summary = "Get user by id")
@@ -91,20 +88,22 @@ public class UserController {
     @PatchMapping("/{id}")
     public UserResponse update(
             @PathVariable UUID id,
-            @Valid @RequestBody UpdateUserRequest request
+            @Valid @RequestBody UserUpdateRequest request
     ) {
         return userService.update(id, request);
     }
 
     @Operation(summary = "Block user")
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "204", description = "User blocked successfully (no content)"),
+            @ApiResponse(responseCode = "200", description = "User blocked successfully (no content)"),
             @ApiResponse(responseCode = "404", description = "User not found",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = ApiError.class))),
+            @ApiResponse(responseCode = "409", description = "User already blocked",
                     content = @Content(mediaType = "application/json", schema = @Schema(implementation = ApiError.class))),
             @ApiResponse(responseCode = "500", description = "Internal server error",
                     content = @Content(mediaType = "application/json", schema = @Schema(implementation = ApiError.class)))
     })
-    @DeleteMapping("/{id}")
+    @PostMapping("/{id}/block")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void block(@PathVariable UUID id) {
         userService.block(id);

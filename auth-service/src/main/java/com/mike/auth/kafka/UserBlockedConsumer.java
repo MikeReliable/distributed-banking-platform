@@ -1,10 +1,10 @@
-package com.mike.transfer.kafka;
+package com.mike.auth.kafka;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.mike.transfer.dto.CardCreatedEvent;
-import com.mike.transfer.service.TransferService;
+import com.mike.auth.dto.UserBlockedEvent;
+import com.mike.auth.service.AuthService;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -18,14 +18,14 @@ import java.util.UUID;
 
 @Component
 @RequiredArgsConstructor
-public class CardCreatedConsumer {
+public class UserBlockedConsumer {
 
-    private static final Logger log = LoggerFactory.getLogger(CardCreatedConsumer.class);
+    private static final Logger log = LoggerFactory.getLogger(UserBlockedConsumer.class);
 
-    private final TransferService transferService;
+    private final AuthService authService;
     private final ObjectMapper objectMapper;
 
-    @KafkaListener(topics = "card-events", groupId = "transfer-service-group")
+    @KafkaListener(topics = "blocked-events", groupId = "auth-service-group")
     public void listen(
             @Payload String message,
             @Header(name = "X-Request-Id", required = false) String requestId
@@ -47,13 +47,13 @@ public class CardCreatedConsumer {
                 return;
             }
 
-            if (!"CARD_CREATED".equals(root.get("type").asText())) {
+            if (!"USER_BLOCKED".equals(root.get("type").asText())) {
                 log.debug("Kafka event ignored | type={}", root.get("type").asText());
                 return;
             }
 
-            CardCreatedEvent event =
-                    objectMapper.treeToValue(root.get("payload"), CardCreatedEvent.class);
+            UserBlockedEvent event =
+                    objectMapper.treeToValue(root.get("payload"), UserBlockedEvent.class);
 
             if (requestId == null) {
                 requestId = "kafka-" + UUID.randomUUID();
@@ -61,13 +61,13 @@ public class CardCreatedConsumer {
             MDC.put("requestId", requestId);
 
             if (event.userId() == null) {
-                log.warn("CARD_CREATED without userId");
+                log.warn("USER_BLOCKED without userId");
                 return;
             }
 
-            log.info("CARD_CREATED event received | userId={}", event.userId());
-            transferService.createDefaultAccounts(UUID.fromString(event.userId()));
-            log.info("CARD_CREATED event processed | userId={}", event.userId());
+            log.info("USER_BLOCKED event received | userId={}", event.userId());
+            authService.blockUser(UUID.fromString(event.userId()));
+            log.info("USER_BLOCKED event processed | userId={}", event.userId());
 
         } catch (Exception e) {
             log.error("Kafka event processing failed", e);
