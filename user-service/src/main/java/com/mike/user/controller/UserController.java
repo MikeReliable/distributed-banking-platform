@@ -1,7 +1,6 @@
 package com.mike.user.controller;
 
 import com.mike.user.common.ApiError;
-import com.mike.user.dto.UserRegisteredEvent;
 import com.mike.user.dto.UserResponse;
 import com.mike.user.dto.UserUpdateRequest;
 import com.mike.user.service.UserService;
@@ -23,26 +22,6 @@ import java.util.UUID;
 public class UserController {
 
     private final UserService userService;
-
-    @Operation(summary = "Create new user")
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "201", description = "User created successfully",
-                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = UserResponse.class))),
-            @ApiResponse(responseCode = "400", description = "Validation error",
-                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = ApiError.class))),
-            @ApiResponse(responseCode = "404", description = "User not found",
-                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = ApiError.class))),
-            @ApiResponse(responseCode = "409", description = "User  or email already exists",
-                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = ApiError.class))),
-            @ApiResponse(responseCode = "500", description = "Internal server error",
-                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = ApiError.class)))
-    })
-//    @PostMapping
-    public void createUser(
-            @Valid @RequestBody UserRegisteredEvent request
-    ) {
-        userService.createUser(request);
-    }
 
     @Operation(summary = "Get user by id")
     @ApiResponses(value = {
@@ -95,7 +74,7 @@ public class UserController {
 
     @Operation(summary = "Block user")
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "User blocked successfully (no content)"),
+            @ApiResponse(responseCode = "204", description = "User blocked successfully (no content)"),
             @ApiResponse(responseCode = "404", description = "User not found",
                     content = @Content(mediaType = "application/json", schema = @Schema(implementation = ApiError.class))),
             @ApiResponse(responseCode = "409", description = "User already blocked",

@@ -25,7 +25,7 @@ public class UserBlockedConsumer {
     private final AuthService authService;
     private final ObjectMapper objectMapper;
 
-    @KafkaListener(topics = "blocked-events", groupId = "auth-service-group")
+    @KafkaListener(topics = "blocked-events", groupId = "${spring.kafka.consumer.group-id}")
     public void listen(
             @Payload String message,
             @Header(name = "X-Request-Id", required = false) String requestId

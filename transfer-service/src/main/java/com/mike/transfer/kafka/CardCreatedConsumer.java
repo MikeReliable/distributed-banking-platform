@@ -25,7 +25,7 @@ public class CardCreatedConsumer {
     private final TransferService transferService;
     private final ObjectMapper objectMapper;
 
-    @KafkaListener(topics = "card-events", groupId = "transfer-service-group")
+    @KafkaListener(topics = "card-events", groupId = "${spring.kafka.consumer.group-id}")
     public void listen(
             @Payload String message,
             @Header(name = "X-Request-Id", required = false) String requestId

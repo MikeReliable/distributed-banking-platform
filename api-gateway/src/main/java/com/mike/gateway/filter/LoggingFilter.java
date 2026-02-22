@@ -21,7 +21,7 @@ public class LoggingFilter implements WebFilter {
 
         return Mono.deferContextual(ctx -> {
             String requestId = ctx.getOrDefault(
-                    CorrelationIdFilter.HEADER,
+                    CorrelationIdFilter.CONTEXT_KEY,
                     "N/A"
             );
 

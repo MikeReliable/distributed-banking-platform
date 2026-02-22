@@ -20,7 +20,7 @@ public class UserDetailsServiceImpl implements UserDetailsService {
 
         return repository.findByEmail(email)
                 .map(user -> User.builder()
-                        .username(user.getUsername())
+                        .username(user.getEmail())
                         .password(user.getPassword())
                         .roles(user.getRole().name().replace("ROLE_", ""))
                         .build())

@@ -30,6 +30,8 @@ spring:
 
   kafka:
     bootstrap-servers: kafka:9092
+    admin:
+      auto-create: true
     consumer:
       group-id: card-service-group
       auto-offset-reset: earliest
