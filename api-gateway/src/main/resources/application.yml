@@ -29,35 +29,6 @@ spring:
         enabled: true
 
       routes:
-        - id: auth
-          uri: http://auth-service:8081
-          predicates:
-            - Path=/auth/**
-          filters:
-            - StripPrefix=1
-
-        - id: users
-          uri: http://user-service:8082
-          predicates:
-            - Path=/users/**
-          filters:
-            - StripPrefix=1
-
-        - id: cards
-          uri: http://card-service:8083
-          predicates:
-            - Path=/cards/**
-          filters:
-            - StripPrefix=1
-
-        - id: transfers
-          uri: http://transfer-service:8084
-          predicates:
-            - Path=/transfers/**
-          filters:
-            - StripPrefix=1
-
-
         - id: auth-api-docs
           uri: http://auth-service:8081
           predicates:
@@ -85,6 +56,27 @@ spring:
             - Path=/transfers/v3/api-docs
           filters:
             - RewritePath=/transfers/(?<segment>.*), /$\{segment}
+
+
+        - id: auth
+          uri: http://auth-service:8081
+          predicates:
+            - Path=/auth/**
+
+        - id: users
+          uri: http://user-service:8082
+          predicates:
+            - Path=/users/**
+
+        - id: cards
+          uri: http://card-service:8083
+          predicates:
+            - Path=/cards/**
+
+        - id: transfers
+          uri: http://transfer-service:8084
+          predicates:
+            - Path=/transfers/**
 
 logging:
   level:

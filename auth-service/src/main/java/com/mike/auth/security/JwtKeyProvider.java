@@ -1,10 +1,12 @@
 package com.mike.auth.security;
 
+import lombok.Getter;
 import org.springframework.stereotype.Component;
 
 import java.security.KeyPair;
 import java.security.KeyPairGenerator;
 
+@Getter
 @Component
 public class JwtKeyProvider {
 
@@ -20,7 +22,4 @@ public class JwtKeyProvider {
         }
     }
 
-    public KeyPair getKeyPair() {
-        return keyPair;
-    }
 }

@@ -17,6 +17,11 @@ databaseChangeLog:
                   constraints:
                     nullable: false
               - column:
+                  name: request_hash
+                  type: varchar(64)
+                  constraints:
+                    nullable: false
+              - column:
                   name: created_at
                   type: timestamp
                   defaultValueComputed: CURRENT_TIMESTAMP

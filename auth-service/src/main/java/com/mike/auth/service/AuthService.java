@@ -1,20 +1,21 @@
 package com.mike.auth.service;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.mike.auth.domain.IdempotentRequest;
 import com.mike.auth.domain.Role;
 import com.mike.auth.domain.UserCredentials;
 import com.mike.auth.dto.*;
-import com.mike.auth.exception.EventSerializationException;
-import com.mike.auth.exception.InvalidCredentialsException;
-import com.mike.auth.exception.UserAlreadyExistsException;
+import com.mike.auth.exception.*;
 import com.mike.auth.outbox.OutboxEvent;
 import com.mike.auth.outbox.OutboxRepository;
 import com.mike.auth.repository.IdempotentRepository;
 import com.mike.auth.repository.UserCredentialsRepository;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import org.apache.commons.codec.digest.DigestUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
@@ -23,6 +24,7 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.util.Map;
 import java.util.UUID;
 
 @Service
@@ -41,18 +43,27 @@ public class AuthService {
 
     @Transactional
     public UserResponse register(UserRegisteredRequest request, String idempotencyKey) {
-        if (idempotencyKey != null) {
-            return idempotentRepository.findById(idempotencyKey)
-                    .map(IdempotentRequest::getEntityId)
-                    .flatMap(repository::findById)
-                    .map(this::map)
-                    .orElseGet(() -> registerInternal(request, idempotencyKey));
+        if (idempotencyKey == null) {
+            return registerInternal(request, null, null);
         }
 
-        return registerInternal(request, null);
+        String currentHash = computeHash(request);
+        var existing = idempotentRepository.findById(idempotencyKey);
+
+        if (existing.isPresent()) {
+            IdempotentRequest ir = existing.get();
+            if (!currentHash.equals(ir.getRequestHash())) {
+                throw new IdempotencyConflictException();
+            }
+            UserCredentials user = repository.findById(ir.getEntityId())
+                    .orElseThrow(() -> new IllegalStateException("User not found for idempotency key"));
+            return map(user);
+        }
+
+        return registerInternal(request, idempotencyKey, currentHash);
     }
 
-    private UserResponse registerInternal(UserRegisteredRequest request, String key) {
+    private UserResponse registerInternal(UserRegisteredRequest request, String idempotencyKey, String requestHash) {
 
         repository.findByEmail(request.email()).ifPresent(u -> {
             throw new UserAlreadyExistsException(request.email());
@@ -68,8 +79,8 @@ public class AuthService {
         );
         repository.save(user);
 
-        if (key != null) {
-            idempotentRepository.save(new IdempotentRequest(key, userId));
+        if (idempotencyKey != null) {
+            idempotentRepository.save(new IdempotentRequest(idempotencyKey, userId, requestHash));
         }
 
         UserRegisteredEvent event = new UserRegisteredEvent(userId, request.username(), request.email());
@@ -113,20 +124,32 @@ public class AuthService {
         return new LoginResponse(token);
     }
 
-    private JsonNode toJson(Object event) {
-        try {
-            return objectMapper.valueToTree(event);
-        } catch (Exception e) {
-            throw new EventSerializationException(event.getClass().getSimpleName(), e);
-        }
-    }
-
     public void blockUser(UUID uuid) {
         repository.findById(uuid).ifPresent(user -> {
             user.block();
             repository.save(user);
             log.info("User blocked in auth-service | userId={}", uuid);
         });
+    }
+
+    private String computeHash(UserRegisteredRequest request) {
+        try {
+            Map<String, Object> map = objectMapper.convertValue(request, new TypeReference<>() {
+            });
+            map.put("operationType", "USER_REGISTERED");
+            String json = objectMapper.writeValueAsString(map);
+            return DigestUtils.sha256Hex(json);
+        } catch (JsonProcessingException e) {
+            throw new IdempotencyHashException();
+        }
+    }
+
+    private JsonNode toJson(Object event) {
+        try {
+            return objectMapper.valueToTree(event);
+        } catch (Exception e) {
+            throw new EventSerializationException(event.getClass().getSimpleName(), e);
+        }
     }
 
     private UserResponse map(UserCredentials u) {

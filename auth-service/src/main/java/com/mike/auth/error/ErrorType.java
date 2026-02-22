@@ -5,6 +5,7 @@ import org.springframework.http.HttpStatus;
 
 @Getter
 public enum ErrorType {
+    IDEMPOTENCY_CONFLICT(HttpStatus.CONFLICT, "Idempotency Conflict"),
     USER_NOT_FOUND(HttpStatus.NOT_FOUND, "User Not Found"),
     USER_ALREADY_EXISTS(HttpStatus.CONFLICT, "Conflict"),
     UNAUTHORIZED(HttpStatus.UNAUTHORIZED, "Unauthorized"),
