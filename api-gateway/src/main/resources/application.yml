@@ -53,7 +53,7 @@ spring:
         - id: transfers-api-docs
           uri: http://transfer-service:8084
           predicates:
-            - Path=/transfers/v3/api-docs
+            - Path=/transfers/v3/api-docs,/analytics/v3/api-docs
           filters:
             - RewritePath=/transfers/(?<segment>.*), /$\{segment}
 
@@ -76,7 +76,7 @@ spring:
         - id: transfers
           uri: http://transfer-service:8084
           predicates:
-            - Path=/transfers/**
+            - Path=/transfers/**,/analytics/**
 
 logging:
   level:

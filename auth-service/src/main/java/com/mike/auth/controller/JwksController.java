@@ -1,5 +1,6 @@
 package com.mike.auth.controller;
 
+import com.mike.auth.config.InternalClientProperties;
 import com.mike.auth.security.JwtKeyProvider;
 import com.mike.auth.service.JwtService;
 import jakarta.servlet.http.HttpServletRequest;
@@ -9,6 +10,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.math.BigInteger;
+import java.security.MessageDigest;
 import java.nio.charset.StandardCharsets;
 import java.security.interfaces.RSAPublicKey;
 import java.util.Base64;
@@ -21,10 +23,16 @@ public class JwksController {
 
     private final JwtKeyProvider keyProvider;
     private final JwtService jwtService;
+    private final InternalClientProperties internalClientProperties;
 
-    public JwksController(JwtKeyProvider keyProvider, JwtService jwtService) {
+    public JwksController(
+            JwtKeyProvider keyProvider,
+            JwtService jwtService,
+            InternalClientProperties internalClientProperties
+    ) {
         this.keyProvider = keyProvider;
         this.jwtService = jwtService;
+        this.internalClientProperties = internalClientProperties;
     }
 
     @GetMapping("/jwks")
@@ -78,14 +86,26 @@ public class JwksController {
             }
         }
 
-        if (!"transfer-service".equals(clientId) || !"secret".equals(clientSecret)) {
+        String expectedSecret = internalClientProperties.getInternalClients().get(clientId);
+        if (expectedSecret == null || !secretsEqual(clientSecret, expectedSecret)) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
+
         String token = jwtService.generateServiceToken(clientId);
         return ResponseEntity.ok(Map.of(
                 "access_token", token,
                 "token_type", "bearer",
                 "expires_in", "3600"
         ));
+    }
+
+    private boolean secretsEqual(String actual, String expected) {
+        if (actual == null || expected == null) {
+            return false;
+        }
+        return MessageDigest.isEqual(
+                actual.getBytes(StandardCharsets.UTF_8),
+                expected.getBytes(StandardCharsets.UTF_8)
+        );
     }
 }

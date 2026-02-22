@@ -40,3 +40,7 @@ spring:
 logging:
   level:
     root: INFO
+
+auth:
+  internal-clients:
+    transfer-service: ${INTERNAL_CLIENT_TRANSFER_SERVICE_SECRET:default-secret}

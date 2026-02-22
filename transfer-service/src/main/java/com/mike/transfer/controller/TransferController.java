@@ -18,6 +18,7 @@ import java.math.BigDecimal;
 import java.util.UUID;
 
 @RestController
+@RequestMapping("/transfers")
 public class TransferController {
 
     private final TransferService service;
@@ -38,7 +39,7 @@ public class TransferController {
             @ApiResponse(responseCode = "500", description = "Internal server error",
                     content = @Content(mediaType = "application/json", schema = @Schema(implementation = ApiError.class)))
     })
-    @PostMapping("/transfers")
+    @PostMapping
     public void makeTransfer(@Valid @RequestBody TransferRequest request,
                              @RequestHeader(value = "Idempotency-Key", required = false) String idempotencyKey) {
         service.transfer(request, idempotencyKey);

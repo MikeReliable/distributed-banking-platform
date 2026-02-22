@@ -103,6 +103,7 @@ services:
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres-auth:5432/auth
       SPRING_DATASOURCE_USERNAME: auth
       SPRING_DATASOURCE_PASSWORD: auth
+      INTERNAL_CLIENT_TRANSFER_SERVICE_SECRET: transfer-service-secret
     ports:
       - "8081:8081"
     networks:
@@ -166,6 +167,8 @@ services:
       SPRING_DATASOURCE_PASSWORD: transfer
       SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK_SET_URI: http://auth-service:8081/auth/jwks
       SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+      INTERNAL_CLIENT_TRANSFER_SERVICE_ID: transfer-service
+      INTERNAL_CLIENT_TRANSFER_SERVICE_SECRET: transfer-service-secret
     ports:
       - "8084:8084"
     networks:
