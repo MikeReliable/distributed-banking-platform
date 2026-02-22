@@ -26,6 +26,9 @@ dependencies {
     implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.3.0")
     implementation("com.fasterxml.jackson.core:jackson-databind")
 
+    implementation("org.springframework.boot:spring-boot-starter-aop")
+    implementation("org.springframework.retry:spring-retry")
+
     implementation("commons-codec:commons-codec:1.16.0")
 
     runtimeOnly("org.postgresql:postgresql")
