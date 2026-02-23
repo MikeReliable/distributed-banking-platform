@@ -7,9 +7,9 @@ spring:
     name: card-service
 
   datasource:
-    url: jdbc:postgresql://postgres-card:5432/card
-    username: card
-    password: card
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://postgres-card:5432/card}
+    username: ${SPRING_DATASOURCE_USERNAME:card}
+    password: ${SPRING_DATASOURCE_PASSWORD:card}
     driver-class-name: org.postgresql.Driver
 
   jpa:

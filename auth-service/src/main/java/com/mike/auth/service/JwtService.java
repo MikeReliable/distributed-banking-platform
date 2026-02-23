@@ -35,7 +35,7 @@ public class JwtService {
         return Jwts.builder()
                 .setHeaderParam("kid", KEY_ID)
                 .setSubject(clientId)
-                .claim("role", Role.SERVICE.name())
+                .claim("role", Role.ROLE_SERVICE.name())
                 .setIssuer("auth-service")
                 .setIssuedAt(new Date())
                 .setExpiration(new Date(System.currentTimeMillis() + EXPIRATION_MS))

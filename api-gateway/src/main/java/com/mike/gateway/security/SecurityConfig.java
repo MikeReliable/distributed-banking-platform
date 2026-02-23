@@ -27,7 +27,9 @@ public class SecurityConfig {
                                 "/*/swagger-ui/**",
                                 "/*/v3/api-docs/**"
                         ).permitAll()
-                        .anyExchange().authenticated()
+                        .pathMatchers("/users/**", "/cards/**", "/transfers/**", "/analytics/**")
+                        .hasAnyAuthority("ROLE_USER", "ROLE_ADMIN")
+                        .anyExchange().denyAll()
                 )
                 .oauth2ResourceServer(oauth -> oauth
                         .jwt(jwt -> jwt

@@ -7,9 +7,9 @@ spring:
     name: transfer-service
 
   datasource:
-    url: jdbc:postgresql://postgres-transfer:5432/transfer
-    username: transfer
-    password: transfer
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://postgres-transfer:5432/transfer}
+    username: ${SPRING_DATASOURCE_USERNAME:transfer}
+    password: ${SPRING_DATASOURCE_PASSWORD:transfer}
     driver-class-name: org.postgresql.Driver
 
   jpa:

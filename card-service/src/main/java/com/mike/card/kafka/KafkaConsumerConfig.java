@@ -2,7 +2,6 @@ package com.mike.card.kafka;
 
 import com.mike.card.dto.UserCreateEvent;
 import lombok.AllArgsConstructor;
-import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.common.TopicPartition;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -15,7 +14,6 @@ import org.springframework.kafka.listener.DeadLetterPublishingRecoverer;
 import org.springframework.kafka.listener.DefaultErrorHandler;
 import org.springframework.kafka.support.ExponentialBackOffWithMaxRetries;
 import org.springframework.kafka.support.serializer.DeserializationException;
-import org.springframework.util.backoff.FixedBackOff;
 
 @Configuration
 @AllArgsConstructor
