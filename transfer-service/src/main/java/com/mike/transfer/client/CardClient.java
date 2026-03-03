@@ -10,7 +10,7 @@ import java.util.UUID;
 
 @FeignClient(
         name = "card-service",
-        url = "http://card-service:8083",
+        url = "${card-service.url}",
         configuration = FeignClientConfig.class
 )
 public interface CardClient {

@@ -33,7 +33,6 @@ public class SecurityConfig {
                 )
                 .oauth2ResourceServer(oauth -> oauth
                         .jwt(jwt -> jwt
-                                .jwkSetUri("http://auth-service:8081/auth/jwks")
                                 .jwtAuthenticationConverter(jwtAuthenticationConverter())
                         )
                 )

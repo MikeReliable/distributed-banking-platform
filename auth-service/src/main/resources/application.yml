@@ -1,5 +1,11 @@
 server:
-  port: 8081
+  port: ${SERVER_PORT:8443}
+  ssl:
+    enabled: true
+    key-store: /certs/shared-services.p12
+    key-store-password: shared-password-example
+    key-store-type: PKCS12
+    key-alias: bank-shared-tls
   forward-headers-strategy: framework
 
 spring:
@@ -44,3 +50,4 @@ logging:
 auth:
   internal-clients:
     transfer-service: ${INTERNAL_CLIENT_TRANSFER_SERVICE_SECRET:default-secret}
+

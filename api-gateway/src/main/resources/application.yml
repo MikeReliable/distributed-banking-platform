@@ -1,5 +1,11 @@
 server:
-  port: 8080
+  port: ${SERVER_PORT:8443}
+  ssl:
+    enabled: true
+    key-store: /certs/shared-services.p12
+    key-store-password: shared-password-example
+    key-store-type: PKCS12
+    key-alias: bank-shared-tls
 
 spring:
   application:
@@ -9,7 +15,7 @@ spring:
     oauth2:
       resourceserver:
         jwt:
-          jwk-set-uri: http://auth-service:8081/auth/jwks
+          jwk-set-uri: https://auth-service:8443/auth/jwks
 
   autoconfigure:
     exclude:
@@ -30,28 +36,28 @@ spring:
 
       routes:
         - id: auth-api-docs
-          uri: http://auth-service:8081
+          uri: https://auth-service:8443
           predicates:
             - Path=/auth/v3/api-docs
           filters:
             - RewritePath=/auth/(?<segment>.*), /$\{segment}
 
         - id: users-api-docs
-          uri: http://user-service:8082
+          uri: https://user-service:8443
           predicates:
             - Path=/users/v3/api-docs
           filters:
             - RewritePath=/users/(?<segment>.*), /$\{segment}
 
         - id: cards-api-docs
-          uri: http://card-service:8083
+          uri: https://card-service:8443
           predicates:
             - Path=/cards/v3/api-docs
           filters:
             - RewritePath=/cards/(?<segment>.*), /$\{segment}
 
         - id: transfers-api-docs
-          uri: http://transfer-service:8084
+          uri: https://transfer-service:8443
           predicates:
             - Path=/transfers/v3/api-docs,/analytics/v3/api-docs
           filters:
@@ -59,24 +65,29 @@ spring:
 
 
         - id: auth
-          uri: http://auth-service:8081
+          uri: https://auth-service:8443
           predicates:
             - Path=/auth/**
 
         - id: users
-          uri: http://user-service:8082
+          uri: https://user-service:8443
           predicates:
             - Path=/users/**
 
         - id: cards
-          uri: http://card-service:8083
+          uri: https://card-service:8443
           predicates:
             - Path=/cards/**
 
         - id: transfers
-          uri: http://transfer-service:8084
+          uri: https://transfer-service:8443
           predicates:
-            - Path=/transfers/**,/analytics/**
+            - Path=/transfers/**
+
+        - id: analytics
+          uri: https://transfer-service:8443
+          predicates:
+            - Path=/analytics/**
 
 logging:
   level:
@@ -97,3 +108,4 @@ springdoc:
         url: /transfers/v3/api-docs
     disable-swagger-default-url: true
     path: /swagger-ui.html
+

@@ -6,7 +6,7 @@ services:
     environment:
       POSTGRES_DB: auth
       POSTGRES_USER: auth
-      POSTGRES_PASSWORD: auth
+      POSTGRES_PASSWORD: ${DB_AUTH_PASSWORD:-auth}
     ports:
       - "5432:5432"
     volumes:
@@ -25,7 +25,7 @@ services:
     environment:
       POSTGRES_DB: card
       POSTGRES_USER: card
-      POSTGRES_PASSWORD: card
+      POSTGRES_PASSWORD: ${DB_CARD_PASSWORD:-card}
     ports:
       - "5433:5432"
     volumes:
@@ -44,7 +44,7 @@ services:
     environment:
       POSTGRES_DB: transfer
       POSTGRES_USER: transfer
-      POSTGRES_PASSWORD: transfer
+      POSTGRES_PASSWORD: ${DB_TRANSFER_PASSWORD:-transfer}
     ports:
       - "5434:5432"
     volumes:
@@ -63,7 +63,7 @@ services:
     environment:
       POSTGRES_DB: userdb
       POSTGRES_USER: user
-      POSTGRES_PASSWORD: user
+      POSTGRES_PASSWORD: ${DB_USERDB_PASSWORD:-user}
     ports:
       - "5435:5432"
     volumes:
@@ -84,8 +84,28 @@ services:
     depends_on:
       auth-service:
         condition: service_started
+      user-service:
+        condition: service_started
+      card-service:
+          condition: service_started
+      transfer-service:
+          condition: service_started
     ports:
-      - "8080:8080"
+      - "8080:8443"
+    environment:
+      SERVER_PORT: 8443
+      SERVER_SSL_ENABLED: "true"
+      SERVER_SSL_KEY_STORE: /certs/shared-services.p12
+      SERVER_SSL_KEY_STORE_PASSWORD: ${SHARED_SSL_KEYSTORE_PASSWORD:-shared-password-example}
+      SERVER_SSL_KEY_STORE_TYPE: PKCS12
+      SERVER_SSL_KEY_ALIAS: bank-shared-tls
+      JAVA_TOOL_OPTIONS: >
+        -Djavax.net.ssl.trustStore=/certs/truststore.p12
+        -Djavax.net.ssl.trustStorePassword=${TRUSTSTORE_PASSWORD:-truststore-password-example}
+    volumes:
+      - ./certs:/certs:ro
+    expose:
+      - "8443"
     networks:
       - bank-network
 
@@ -102,10 +122,22 @@ services:
     environment:
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres-auth:5432/auth
       SPRING_DATASOURCE_USERNAME: auth
-      SPRING_DATASOURCE_PASSWORD: auth
-      INTERNAL_CLIENT_TRANSFER_SERVICE_SECRET: transfer-service-secret
+      SPRING_DATASOURCE_PASSWORD: ${DB_AUTH_PASSWORD:-auth}
+      INTERNAL_CLIENT_TRANSFER_SERVICE_SECRET: ${INTERNAL_CLIENT_TRANSFER_SERVICE_SECRET:-transfer-service-secret}
+
+      SERVER_PORT: 8443
+      SERVER_SSL_ENABLED: "true"
+      SERVER_SSL_KEY_STORE: /certs/shared-services.p12
+      SERVER_SSL_KEY_STORE_PASSWORD: ${SHARED_SSL_KEYSTORE_PASSWORD:-shared-password-example}
+      SERVER_SSL_KEY_STORE_TYPE: PKCS12
+      SERVER_SSL_KEY_ALIAS: bank-shared-tls
+      JAVA_TOOL_OPTIONS: >
+        -Djavax.net.ssl.trustStore=/certs/truststore.p12
+        -Djavax.net.ssl.trustStorePassword=${TRUSTSTORE_PASSWORD:-truststore-password-example}
+    volumes:
+      - ./certs:/certs:ro
     expose:
-      - "8081"
+        - "8443"
     networks:
       - bank-network
 
@@ -122,11 +154,23 @@ services:
     environment:
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres-user:5432/userdb
       SPRING_DATASOURCE_USERNAME: user
-      SPRING_DATASOURCE_PASSWORD: user
-      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK_SET_URI: http://auth-service:8081/auth/jwks
+      SPRING_DATASOURCE_PASSWORD: ${DB_USERDB_PASSWORD:-user}
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK_SET_URI: https://auth-service:8443/auth/jwks
       SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+
+      SERVER_PORT: 8443
+      SERVER_SSL_ENABLED: "true"
+      SERVER_SSL_KEY_STORE: /certs/shared-services.p12
+      SERVER_SSL_KEY_STORE_PASSWORD: ${SHARED_SSL_KEYSTORE_PASSWORD:-shared-password-example}
+      SERVER_SSL_KEY_STORE_TYPE: PKCS12
+      SERVER_SSL_KEY_ALIAS: bank-shared-tls
+      JAVA_TOOL_OPTIONS: >
+        -Djavax.net.ssl.trustStore=/certs/truststore.p12
+        -Djavax.net.ssl.trustStorePassword=${TRUSTSTORE_PASSWORD:-truststore-password-example}
+    volumes:
+      - ./certs:/certs:ro
     expose:
-      - "8082"
+      - "8443"
     networks:
       - bank-network
 
@@ -143,11 +187,23 @@ services:
     environment:
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres-card:5432/card
       SPRING_DATASOURCE_USERNAME: card
-      SPRING_DATASOURCE_PASSWORD: card
-      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK_SET_URI: http://auth-service:8081/auth/jwks
+      SPRING_DATASOURCE_PASSWORD: ${DB_CARD_PASSWORD:-card}
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK_SET_URI: https://auth-service:8443/auth/jwks
       SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+
+      SERVER_PORT: 8443
+      SERVER_SSL_ENABLED: "true"
+      SERVER_SSL_KEY_STORE: /certs/shared-services.p12
+      SERVER_SSL_KEY_STORE_PASSWORD: ${SHARED_SSL_KEYSTORE_PASSWORD:-shared-password-example}
+      SERVER_SSL_KEY_STORE_TYPE: PKCS12
+      SERVER_SSL_KEY_ALIAS: bank-shared-tls
+      JAVA_TOOL_OPTIONS: >
+        -Djavax.net.ssl.trustStore=/certs/truststore.p12
+        -Djavax.net.ssl.trustStorePassword=${TRUSTSTORE_PASSWORD:-truststore-password-example}
+    volumes:
+      - ./certs:/certs:ro
     expose:
-      - "8083"
+      - "8443"
     networks:
       - bank-network
 
@@ -164,13 +220,25 @@ services:
     environment:
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres-transfer:5432/transfer
       SPRING_DATASOURCE_USERNAME: transfer
-      SPRING_DATASOURCE_PASSWORD: transfer
-      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK_SET_URI: http://auth-service:8081/auth/jwks
+      SPRING_DATASOURCE_PASSWORD: ${DB_TRANSFER_PASSWORD:-transfer}
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK_SET_URI: https://auth-service:8443/auth/jwks
       SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:9092
       INTERNAL_CLIENT_TRANSFER_SERVICE_ID: transfer-service
-      INTERNAL_CLIENT_TRANSFER_SERVICE_SECRET: transfer-service-secret
+      INTERNAL_CLIENT_TRANSFER_SERVICE_SECRET: ${INTERNAL_CLIENT_TRANSFER_SERVICE_SECRET:-transfer-service-secret}
+
+      SERVER_PORT: 8443
+      SERVER_SSL_ENABLED: "true"
+      SERVER_SSL_KEY_STORE: /certs/shared-services.p12
+      SERVER_SSL_KEY_STORE_PASSWORD: ${SHARED_SSL_KEYSTORE_PASSWORD:-shared-password-example}
+      SERVER_SSL_KEY_STORE_TYPE: PKCS12
+      SERVER_SSL_KEY_ALIAS: bank-shared-tls
+      JAVA_TOOL_OPTIONS: >
+        -Djavax.net.ssl.trustStore=/certs/truststore.p12
+        -Djavax.net.ssl.trustStorePassword=${TRUSTSTORE_PASSWORD:-truststore-password-example}
+    volumes:
+      - ./certs:/certs:ro
     expose:
-      - "8084"
+      - "8443"
     networks:
       - bank-network
 
@@ -228,3 +296,5 @@ volumes:
   kafka-data:
   zookeeper-data:
   zookeeper-log:
+
+
