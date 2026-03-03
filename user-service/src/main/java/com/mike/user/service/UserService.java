@@ -9,15 +9,19 @@ import com.mike.user.dto.UserRegisteredEvent;
 import com.mike.user.dto.UserResponse;
 import com.mike.user.dto.UserUpdateRequest;
 import com.mike.user.exception.EventSerializationException;
+import com.mike.user.exception.UserAccessDeniedException;
 import com.mike.user.exception.UserAlreadyExistsException;
 import com.mike.user.exception.UserNotFoundException;
 import com.mike.user.outbox.OutboxEvent;
 import com.mike.user.outbox.OutboxRepository;
 import com.mike.user.repository.UserRepository;
+import com.mike.user.security.SecurityRoles;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.GrantedAuthority;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -77,22 +81,42 @@ public class UserService {
     }
 
     @Transactional(readOnly = true)
-    public UserResponse getById(UUID id) {
-        return userRepository.findById(id)
-                .map(this::map)
-                .orElseThrow(() -> new UserNotFoundException(id));
+    public UserResponse getById(UUID id, Authentication authentication) {
+        assertSelfOrAdmin(authentication, id);
+        return mapUserById(id);
     }
 
     @Transactional(readOnly = true)
-    public UserResponse getByEmail(String email) {
-        return userRepository.findByEmailAndBlockedFalse(email)
-                .map(this::map)
-                .orElseThrow(() -> new UserNotFoundException(email));
+    public UserResponse getByEmail(String email, Authentication authentication) {
+        if (hasAuthority(authentication, SecurityRoles.ADMIN)) {
+            return mapUserByEmail(email);
+        }
+
+        UUID currentUserId = currentUserId(authentication);
+        User currentUser = userRepository.findById(currentUserId)
+                .orElseThrow(() -> new UserNotFoundException(currentUserId));
+
+        if (!currentUser.getEmail().equalsIgnoreCase(email)) {
+            throw new UserAccessDeniedException();
+        }
+
+        return map(currentUser);
     }
 
     @Transactional
-    public UserResponse update(UUID id, UserUpdateRequest request) {
-        User user = userRepository.findById(id).orElseThrow(() -> new UserNotFoundException(id));
+    public UserResponse update(UUID id, UserUpdateRequest request, Authentication authentication) {
+        assertSelfOrAdmin(authentication, id);
+        return updateUserInternal(id, request);
+    }
+
+    @Transactional
+    public void block(UUID id, Authentication authentication) {
+        assertSelfOrAdmin(authentication, id);
+        blockUserInternal(id);
+    }
+
+    private UserResponse updateUserInternal(UUID id, UserUpdateRequest request) {
+        User user = findUserById(id);
         if (user.isBlocked()) {
             log.warn("User blocked | userId={}", user.getId());
             throw new UserNotFoundException(user.getId());
@@ -102,9 +126,8 @@ public class UserService {
         return map(user);
     }
 
-    @Transactional
-    public void block(UUID id) {
-        User user = userRepository.findById(id).orElseThrow(() -> new UserNotFoundException(id));
+    private void blockUserInternal(UUID id) {
+        User user = findUserById(id);
         user.userBlock();
         userRepository.save(user);
 
@@ -118,6 +141,51 @@ public class UserService {
         );
         outboxRepository.save(outbox);
         log.info("User blocked | userId={}", id);
+    }
+
+    private User findUserById(UUID id) {
+        return userRepository.findById(id)
+                .orElseThrow(() -> new UserNotFoundException(id));
+    }
+
+    private UserResponse mapUserById(UUID id) {
+        return map(findUserById(id));
+    }
+
+    private UserResponse mapUserByEmail(String email) {
+        return userRepository.findByEmailAndBlockedFalse(email)
+                .map(this::map)
+                .orElseThrow(() -> new UserNotFoundException(email));
+    }
+
+    private void assertSelfOrAdmin(Authentication authentication, UUID requestedUserId) {
+        if (hasAuthority(authentication, SecurityRoles.ADMIN)) {
+            return;
+        }
+        if (!hasAuthority(authentication, SecurityRoles.USER)) {
+            throw new UserAccessDeniedException();
+        }
+        UUID currentUserId = currentUserId(authentication);
+        if (!currentUserId.equals(requestedUserId)) {
+            throw new UserAccessDeniedException();
+        }
+    }
+
+    private boolean hasAuthority(Authentication authentication, String authority) {
+        if (authentication == null || authentication.getAuthorities() == null) {
+            return false;
+        }
+        return authentication.getAuthorities().stream()
+                .map(GrantedAuthority::getAuthority)
+                .anyMatch(authority::equals);
+    }
+
+    private UUID currentUserId(Authentication authentication) {
+        try {
+            return UUID.fromString(authentication.getName());
+        } catch (Exception ex) {
+            throw new UserAccessDeniedException();
+        }
     }
 
     private UserResponse map(User u) {

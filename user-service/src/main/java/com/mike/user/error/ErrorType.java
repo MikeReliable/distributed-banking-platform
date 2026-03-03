@@ -7,6 +7,7 @@ import org.springframework.http.HttpStatus;
 public enum ErrorType {
     USER_NOT_FOUND(HttpStatus.NOT_FOUND, "Not Found"),
     USER_ALREADY_EXISTS(HttpStatus.CONFLICT, "Conflict"),
+    FORBIDDEN(HttpStatus.FORBIDDEN, "Forbidden"),
     VALIDATION_ERROR(HttpStatus.BAD_REQUEST, "Validation Failed"),
     EVENT_SERIALIZATION_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "Internal Error"),
     UNAUTHORIZED(HttpStatus.UNAUTHORIZED, "Unauthorized"),

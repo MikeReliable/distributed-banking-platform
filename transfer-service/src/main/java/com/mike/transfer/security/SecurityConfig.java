@@ -34,11 +34,10 @@ public class SecurityConfig {
                                 "/swagger-ui/**",
                                 "/v3/api-docs/**"
                         ).permitAll()
-                        .requestMatchers("/analytics/**", "/transfers/**").hasAnyAuthority("ROLE_USER", "ROLE_ADMIN")
+                        .requestMatchers("/analytics/**", "/transfers/**").hasAnyAuthority(SecurityRoles.USER, SecurityRoles.ADMIN)
                         .anyRequest().denyAll()
                 )
-                .oauth2ResourceServer(oauth2 -> oauth2.jwt(jwt -> {
-                }))
+                .oauth2ResourceServer(oauth2 -> oauth2.jwt(Customizer.withDefaults()))
                 .oauth2Client(Customizer.withDefaults());
 
         return http.build();
@@ -112,6 +111,8 @@ public class SecurityConfig {
 
                     @Override
                     public void setAuthenticated(boolean isAuthenticated) throws IllegalArgumentException {
+                        throw new UnsupportedOperationException(
+                                "Synthetic service principal is immutable");
                     }
 
                     @Override

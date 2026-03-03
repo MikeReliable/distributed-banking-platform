@@ -12,6 +12,9 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
@@ -36,7 +39,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 @Testcontainers
 @ActiveProfiles("test")
 @SpringBootTest
-public class UserServiceIntegrationTest {
+class UserServiceIntegrationTest {
 
     @Autowired
     UserService userService;
@@ -105,7 +108,7 @@ public class UserServiceIntegrationTest {
         UserRegisteredEvent request = new UserRegisteredEvent(userId, "mike", "mike@mail.com");
 
         userService.createUser(request);
-        userService.block(userId);
+        userService.block(userId, authUser(userId));
 
         User user = userRepository.findById(userId).orElseThrow();
         assertThat(user.isBlocked()).isTrue();
@@ -144,7 +147,7 @@ public class UserServiceIntegrationTest {
                 .untilAsserted(() -> {
                     OutboxEvent event = outboxRepository.findAll().get(0);
                     assertThat(event.isPublished()).isTrue();
-                    assertThat(event.getRetryCount()).isEqualTo(0);
+                    assertThat(event.getRetryCount()).isZero();
                 });
     }
 
@@ -159,7 +162,8 @@ public class UserServiceIntegrationTest {
                         UUID userId = UUID.randomUUID();
                         UserRegisteredEvent request = new UserRegisteredEvent(userId, "user" + i, email);
                         userService.createUser(request);
-                    } catch (UserAlreadyExistsException ignored) {
+                    } catch (UserAlreadyExistsException expected) {
+                        // only one concurrent create should succeed for the same email.
                     }
                     return null;
                 })
@@ -169,5 +173,13 @@ public class UserServiceIntegrationTest {
 
         assertThat(userRepository.count()).isEqualTo(1);
         assertThat(outboxRepository.count()).isEqualTo(1);
+    }
+
+    private Authentication authUser(UUID userId) {
+        return new UsernamePasswordAuthenticationToken(
+                userId.toString(),
+                "N/A",
+                List.of(new SimpleGrantedAuthority("ROLE_USER"))
+        );
     }
 }

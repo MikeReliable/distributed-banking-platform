@@ -8,6 +8,7 @@ import com.mike.user.dto.UserRegisteredEvent;
 import com.mike.user.dto.UserResponse;
 import com.mike.user.dto.UserUpdateRequest;
 import com.mike.user.exception.EventSerializationException;
+import com.mike.user.exception.UserAccessDeniedException;
 import com.mike.user.exception.UserAlreadyExistsException;
 import com.mike.user.exception.UserNotFoundException;
 import com.mike.user.outbox.OutboxEvent;
@@ -19,7 +20,10 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -114,7 +118,7 @@ class UserServiceTest {
         when(userRepository.findById(id)).thenReturn(Optional.of(user));
 
         // when
-        UserResponse response = userService.getById(id);
+        UserResponse response = userService.getById(id, authAdmin());
 
         // then
         assertThat(response.userId()).isEqualTo(id);
@@ -134,7 +138,7 @@ class UserServiceTest {
         UserUpdateRequest request = new UserUpdateRequest("newName");
 
         // when
-        UserResponse response = userService.update(id, request);
+        UserResponse response = userService.update(id, request, authUser(id));
 
         // then
         assertThat(response.username()).isEqualTo("newName");
@@ -151,9 +155,10 @@ class UserServiceTest {
         when(userRepository.findById(id)).thenReturn(Optional.of(user));
 
         UserUpdateRequest request = new UserUpdateRequest("newName");
+        Authentication authentication = authUser(id);
 
         // when + then
-        assertThrows(UserNotFoundException.class, () -> userService.update(id, request));
+        assertThrows(UserNotFoundException.class, () -> userService.update(id, request, authentication));
     }
 
     @Test
@@ -166,7 +171,7 @@ class UserServiceTest {
         when(objectMapper.valueToTree(any())).thenReturn(new ObjectMapper().createObjectNode());
 
         // when
-        userService.block(id);
+        userService.block(id, authUser(id));
 
         // then
         assertThat(user.isBlocked()).isTrue();
@@ -176,5 +181,59 @@ class UserServiceTest {
         verify(outboxRepository).save(outboxCaptor.capture());
         assertThat(outboxCaptor.getValue().getType()).isEqualTo(OutboxEventTopic.USER_BLOCKED.toString());
         assertThat(outboxCaptor.getValue().getAggregateId()).isEqualTo(id.toString());
+    }
+
+    @Test
+    void getById_otherUser_throwsAccessDenied() {
+        // given
+        UUID requestedId = UUID.randomUUID();
+        Authentication anotherUserAuth = authUser(UUID.randomUUID());
+
+        // when + then
+        assertThrows(UserAccessDeniedException.class, () -> userService.getById(requestedId, anotherUserAuth));
+        verify(userRepository, never()).findById(any());
+    }
+
+    @Test
+    void getByEmail_otherEmail_throwsAccessDenied() {
+        // given
+        UUID currentUserId = UUID.randomUUID();
+        User currentUser = new User(currentUserId, "mike", "mike@mail.com");
+        when(userRepository.findById(currentUserId)).thenReturn(Optional.of(currentUser));
+
+        // when + then
+        assertThrows(
+                UserAccessDeniedException.class,
+                () -> userService.getByEmail("other@mail.com", authUser(currentUserId))
+        );
+    }
+
+    @Test
+    void getById_admin_canAccessAnyUser() {
+        // given
+        UUID requestedId = UUID.randomUUID();
+        User requestedUser = new User(requestedId, "mike", "mike@mail.com");
+        when(userRepository.findById(requestedId)).thenReturn(Optional.of(requestedUser));
+
+        // when
+        UserResponse response = userService.getById(requestedId, authAdmin());
+
+        // then
+        assertThat(response.userId()).isEqualTo(requestedId);
+    }
+
+    private Authentication authUser(UUID userId) {
+        Authentication auth = mock(Authentication.class);
+        var authority = new SimpleGrantedAuthority("ROLE_USER");
+        when(auth.getName()).thenReturn(userId.toString());
+        doReturn(List.of(authority)).when(auth).getAuthorities();
+        return auth;
+    }
+
+    private Authentication authAdmin() {
+        Authentication auth = mock(Authentication.class);
+        var authority = new SimpleGrantedAuthority("ROLE_ADMIN");
+        doReturn(List.of(authority)).when(auth).getAuthorities();
+        return auth;
     }
 }

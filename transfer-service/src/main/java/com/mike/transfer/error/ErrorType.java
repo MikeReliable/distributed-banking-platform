@@ -6,6 +6,7 @@ import org.springframework.http.HttpStatus;
 @Getter
 public enum ErrorType {
     UNAUTHORIZED(HttpStatus.UNAUTHORIZED, "Unauthorized"),
+    FORBIDDEN(HttpStatus.FORBIDDEN, "Forbidden"),
     ACCOUNT_NOT_FOUND(HttpStatus.NOT_FOUND, "Account Not Found"),
     INSUFFICIENT_FUNDS(HttpStatus.BAD_REQUEST, "Insufficient Funds"),
     CURRENCY_MISMATCH(HttpStatus.BAD_REQUEST, "Currency Mismatch"),

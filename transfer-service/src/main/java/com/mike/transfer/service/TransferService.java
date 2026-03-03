@@ -12,11 +12,14 @@ import com.mike.transfer.exception.*;
 import com.mike.transfer.repository.AccountRepository;
 import com.mike.transfer.repository.IdempotentRepository;
 import com.mike.transfer.repository.TransferRepository;
+import com.mike.transfer.security.SecurityRoles;
 import lombok.RequiredArgsConstructor;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.GrantedAuthority;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -135,7 +138,7 @@ public class TransferService {
                 request,
                 "TOP_UP",
                 () -> executeTopUp(accountId, amount, idempotencyKey, request),
-                this::getBalance
+                this::readBalanceByAccountId
         );
     }
 
@@ -164,7 +167,7 @@ public class TransferService {
                 request,
                 "WITHDRAW",
                 () -> executeWithdraw(accountId, amount, idempotencyKey, request),
-                this::getBalance
+                this::readBalanceByAccountId
         );
     }
 
@@ -185,9 +188,7 @@ public class TransferService {
 
     @Transactional(readOnly = true)
     public BigDecimal getBalance(UUID accountId) {
-        return accountRepository.findById(accountId)
-                .map(Account::getBalance)
-                .orElseThrow(() -> new AccountNotFoundException(accountId));
+        return readBalanceByAccountId(accountId);
     }
 
     private void validateAmount(BigDecimal amount) {
@@ -202,6 +203,44 @@ public class TransferService {
                 .orElseThrow(() ->
                         new AccountNotFoundException(userId)
                 );
+    }
+
+    @Transactional(readOnly = true)
+    public void assertUserCanAccessAccount(Authentication authentication, UUID accountId) {
+        if (hasAuthority(authentication, SecurityRoles.ADMIN)) {
+            return;
+        }
+        UUID currentUserId = currentUserId(authentication);
+        Account account = accountRepository.findById(accountId)
+                .orElseThrow(() -> new AccountNotFoundException(accountId));
+        if (!account.getUserId().equals(currentUserId)) {
+            throw new TransferAccessDeniedException();
+        }
+    }
+
+    @Transactional(readOnly = true)
+    public void assertUserCanAccessUser(Authentication authentication, UUID userId) {
+        if (hasAuthority(authentication, SecurityRoles.ADMIN)) {
+            return;
+        }
+        UUID currentUserId = currentUserId(authentication);
+        if (!currentUserId.equals(userId)) {
+            throw new TransferAccessDeniedException();
+        }
+    }
+
+    @Transactional(readOnly = true)
+    public void assertUserCanUseSourceCard(Authentication authentication, UUID cardId) {
+        if (hasAuthority(authentication, SecurityRoles.ADMIN)) {
+            return;
+        }
+        UUID currentUserId = currentUserId(authentication);
+        UUID sourceAccountId = cardResolverService.getAccountId(cardId);
+        Account account = accountRepository.findById(sourceAccountId)
+                .orElseThrow(() -> new AccountNotFoundException(sourceAccountId));
+        if (!account.getUserId().equals(currentUserId)) {
+            throw new TransferAccessDeniedException();
+        }
     }
 
     private <T> T handleIdempotency(String key, Object request, String operationType,
@@ -234,5 +273,31 @@ public class TransferService {
         } catch (JsonProcessingException e) {
             throw new IdempotencyHashException();
         }
+    }
+
+    private boolean hasAuthority(Authentication authentication, String authority) {
+        if (authentication == null || authentication.getAuthorities() == null) {
+            return false;
+        }
+        return authentication.getAuthorities().stream()
+                .map(GrantedAuthority::getAuthority)
+                .anyMatch(authority::equals);
+    }
+
+    private UUID currentUserId(Authentication authentication) {
+        if (!hasAuthority(authentication, SecurityRoles.USER)) {
+            throw new TransferAccessDeniedException();
+        }
+        try {
+            return UUID.fromString(authentication.getName());
+        } catch (Exception ex) {
+            throw new TransferAccessDeniedException();
+        }
+    }
+
+    private BigDecimal readBalanceByAccountId(UUID accountId) {
+        return accountRepository.findById(accountId)
+                .map(Account::getBalance)
+                .orElseThrow(() -> new AccountNotFoundException(accountId));
     }
 }

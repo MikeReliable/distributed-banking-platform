@@ -8,6 +8,7 @@ public enum ErrorType {
     EVENT_SERIALIZATION_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "Event Serialization Error"),
     CARD_NOT_FOUND(HttpStatus.NOT_FOUND, "Card Not Found"),
     CARD_BLOCKED(HttpStatus.FORBIDDEN, "Card Blocked"),
+    FORBIDDEN(HttpStatus.FORBIDDEN, "Forbidden"),
     VALIDATION_ERROR(HttpStatus.BAD_REQUEST, "Validation Failed"),
     UNAUTHORIZED(HttpStatus.UNAUTHORIZED, "Unauthorized"),
     INTERNAL_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "Internal Server Error");
