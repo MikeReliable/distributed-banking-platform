@@ -38,3 +38,8 @@ bin/
 
 ### Mac OS ###
 .DS_Store
+
+# Local secrets
+.env
+certs/*.p12
+certs/auth-jwt.p12

@@ -3,7 +3,7 @@ server:
   ssl:
     enabled: true
     key-store: /certs/shared-services.p12
-    key-store-password: shared-password-example
+    key-store-password: ${SHARED_SSL_KEYSTORE_PASSWORD}
     key-store-type: PKCS12
     key-alias: bank-shared-tls
   forward-headers-strategy: framework
@@ -37,7 +37,7 @@ spring:
         registration:
           card-service:
             client-id: ${INTERNAL_CLIENT_TRANSFER_SERVICE_ID:transfer-service}
-            client-secret: ${INTERNAL_CLIENT_TRANSFER_SERVICE_SECRET:default-secret}
+            client-secret: ${INTERNAL_CLIENT_TRANSFER_SERVICE_SECRET}
             authorization-grant-type: client_credentials
             scope: internal
         provider:
@@ -65,3 +65,7 @@ logging:
   level:
     root: INFO
 
+security:
+  jwt:
+    expected-issuer: ${AUTH_JWT_ISSUER:auth-service}
+    accepted-audiences: ${TRANSFER_JWT_ACCEPTED_AUDIENCES:bank-rest-api}

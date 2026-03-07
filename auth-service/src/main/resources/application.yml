@@ -3,7 +3,7 @@ server:
   ssl:
     enabled: true
     key-store: /certs/shared-services.p12
-    key-store-password: shared-password-example
+    key-store-password: ${SHARED_SSL_KEYSTORE_PASSWORD}
     key-store-type: PKCS12
     key-alias: bank-shared-tls
   forward-headers-strategy: framework
@@ -49,5 +49,22 @@ logging:
 
 auth:
   internal-clients:
-    transfer-service: ${INTERNAL_CLIENT_TRANSFER_SERVICE_SECRET:default-secret}
+    transfer-service: ${INTERNAL_CLIENT_TRANSFER_SERVICE_SECRET}
+  rate-limit:
+    login:
+      max-requests: ${AUTH_RATE_LIMIT_LOGIN_MAX_REQUESTS:20}
+      window-seconds: ${AUTH_RATE_LIMIT_LOGIN_WINDOW_SECONDS:60}
+    token:
+      max-requests: ${AUTH_RATE_LIMIT_TOKEN_MAX_REQUESTS:40}
+      window-seconds: ${AUTH_RATE_LIMIT_TOKEN_WINDOW_SECONDS:60}
+  jwt:
+    issuer: ${AUTH_JWT_ISSUER:auth-service}
+    audience:
+      user: ${AUTH_JWT_AUDIENCE_USER:bank-rest-api}
+      service: ${AUTH_JWT_AUDIENCE_SERVICE:bank-rest-internal}
+    keystore:
+      path: ${AUTH_JWT_KEYSTORE_PATH:/certs/auth-jwt.p12}
+      password: ${AUTH_JWT_KEYSTORE_PASSWORD}
+      alias: ${AUTH_JWT_KEY_ALIAS:auth-jwt}
+      type: PKCS12
 

@@ -7,6 +7,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.*;
 
 import java.math.BigInteger;
@@ -87,7 +88,9 @@ public class JwksController {
         }
 
         String expectedSecret = internalClientProperties.getInternalClients().get(clientId);
-        if (expectedSecret == null || !secretsEqual(clientSecret, expectedSecret)) {
+        if (!StringUtils.hasText(clientSecret)
+                || !StringUtils.hasText(expectedSecret)
+                || !secretsEqual(clientSecret, expectedSecret)) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
 
@@ -95,7 +98,7 @@ public class JwksController {
         return ResponseEntity.ok(Map.of(
                 "access_token", token,
                 "token_type", "bearer",
-                "expires_in", "3600"
+                "expires_in", String.valueOf(jwtService.getExpirationSeconds())
         ));
     }
 

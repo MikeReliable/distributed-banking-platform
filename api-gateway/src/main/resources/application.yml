@@ -3,7 +3,7 @@ server:
   ssl:
     enabled: true
     key-store: /certs/shared-services.p12
-    key-store-password: shared-password-example
+    key-store-password: ${SHARED_SSL_KEYSTORE_PASSWORD}
     key-store-type: PKCS12
     key-alias: bank-shared-tls
 
@@ -95,8 +95,14 @@ logging:
     org.springframework.cloud.gateway: INFO
     reactor.netty.http.client: WARN
 
+security:
+  jwt:
+    expected-issuer: ${AUTH_JWT_ISSUER:auth-service}
+    accepted-audiences: ${GATEWAY_JWT_ACCEPTED_AUDIENCES:bank-rest-api}
+
 springdoc:
   swagger-ui:
+    persist-authorization: true
     urls:
       - name: auth
         url: /auth/v3/api-docs

@@ -1,4 +1,4 @@
-## 💳 Disributed Bank Platform
+﻿## 💳 Distributed Bank Platform
 
 This project presents a distributed banking system built with Spring Boot 3 and microservice architecture.
 
@@ -87,25 +87,29 @@ All errors return structured JSON with `type`, `title`, `status`, `detail`, `ins
 ### 🧩 Technologies
 ### Core
 * Java 17
+* Gradle (multi-module)
 * Spring Boot 3.1.6
-* Spring Cloud Gateway 4.0.9
-* Spring Security + OAuth2
-* WebFlux + Reactor Netty
-* Spring Data JPA
-* Hibernate Core 6.2.13.Final
-* Jakarta Persistence 3.1.0
-* Hibernate Validator 8.0.1.Final
+* Spring Security (OAuth2 Resource Server + OAuth2 Client)
+* Spring Cloud Gateway (WebFlux)
+* Spring Cloud OpenFeign + OkHttp
+* Spring Data JPA (Hibernate)
+* Liquibase
+* Spring Kafka
+* JWT (JJWT, RS256, JWKS)
+* Spring Retry
+* Springdoc OpenAPI (Swagger UI)
+* Lombok
 ### Infrastructure
-* PostgreSQL 15
-* Apache Kafka 2.8.3
-* Confluent Platform 7.5.0
-* Liquibase for schema migrations
+* PostgreSQL
+* Apache Kafka + ZooKeeper (Confluent images in Docker)
 * Docker & Docker Compose
 ### 🧪 Testing
 * JUnit 5
+* Spring Boot Test
+* Testcontainers (PostgreSQL, Kafka)
 * AssertJ
+* Mockito
 * Awaitility
-* Testcontainers
 
 ### ▶ Getting Started
 Requirements:
@@ -117,11 +121,53 @@ Clone repository:
 ```sh
 git clone https://github.com/MikeReliable/bank-rest.git
 ```
+Prepare local environment:
+```sh
+cp .env.example .env
+```
+All default local passwords/secrets are now stored in `.env.example`.
+Override values in `.env` if needed:
+```sh
+INTERNAL_CLIENT_TRANSFER_SERVICE_SECRET
+AUTH_JWT_KEYSTORE_PASSWORD
+SHARED_SSL_KEYSTORE_PASSWORD
+TRUSTSTORE_PASSWORD
+DB_AUTH_PASSWORD
+DB_CARD_PASSWORD
+DB_TRANSFER_PASSWORD
+DB_USERDB_PASSWORD
+AUTH_RATE_LIMIT_LOGIN_MAX_REQUESTS
+AUTH_RATE_LIMIT_LOGIN_WINDOW_SECONDS
+AUTH_RATE_LIMIT_TOKEN_MAX_REQUESTS
+AUTH_RATE_LIMIT_TOKEN_WINDOW_SECONDS
+AUTH_JWT_ISSUER
+AUTH_JWT_AUDIENCE_USER
+AUTH_JWT_AUDIENCE_SERVICE
+GATEWAY_JWT_ACCEPTED_AUDIENCES
+USER_JWT_ACCEPTED_AUDIENCES
+CARD_JWT_ACCEPTED_AUDIENCES
+TRANSFER_JWT_ACCEPTED_AUDIENCES
+```
+Generate local JWT keystore (do not commit it):
+```sh
+keytool -genkeypair -alias auth-jwt -keyalg RSA -keysize 2048 -storetype PKCS12 -keystore certs/auth-jwt.p12 -storepass <AUTH_JWT_KEYSTORE_PASSWORD> -validity 3650 -dname "CN=auth-service,OU=bank,O=pet,L=local,S=local,C=US"
+```
+Generate local TLS keystore and truststore (do not commit them):
+```sh
+keytool -genkeypair -alias bank-shared-tls -keyalg RSA -keysize 2048 -storetype PKCS12 -keystore certs/shared-services.p12 -storepass <SHARED_SSL_KEYSTORE_PASSWORD> -validity 3650 -dname "CN=bank-local,OU=bank,O=pet,L=local,S=local,C=US"
+keytool -exportcert -rfc -keystore certs/shared-services.p12 -storepass <SHARED_SSL_KEYSTORE_PASSWORD> -alias bank-shared-tls -file certs/shared-services.crt
+keytool -importcert -noprompt -storetype PKCS12 -keystore certs/truststore.p12 -storepass <TRUSTSTORE_PASSWORD> -alias bank-shared-tls -file certs/shared-services.crt
+```
 Start infrastructure and services:
 ```sh
+./gradlew :api-gateway:bootJar :auth-service:bootJar :user-service:bootJar :card-service:bootJar :transfer-service:bootJar
 docker-compose up --build
+```
+Optional: open PostgreSQL ports for local IDE/psql access (dev-only):
+```sh
+docker compose -f docker-compose.yml -f docker-compose.dev.yml up --build
 ```
 ### Swagger Endpoint
 All services are accessible through the API Gateway
 
-Single Swagger UI: [http://localhost:8080/swagger-ui.html](http://localhost:8080/swagger-ui.html)
+Single Swagger UI: [https://localhost:8080/webjars/swagger-ui](https://localhost:8080/webjars/swagger-ui)

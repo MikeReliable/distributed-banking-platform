@@ -10,6 +10,7 @@ public enum ErrorType {
     USER_ALREADY_EXISTS(HttpStatus.CONFLICT, "Conflict"),
     UNAUTHORIZED(HttpStatus.UNAUTHORIZED, "Unauthorized"),
     FORBIDDEN(HttpStatus.FORBIDDEN, "Forbidden"),
+    TOO_MANY_REQUESTS(HttpStatus.TOO_MANY_REQUESTS, "Too Many Requests"),
     INVALID_CREDENTIALS(HttpStatus.UNAUTHORIZED, "Invalid Credentials"),
     VALIDATION_ERROR(HttpStatus.BAD_REQUEST, "Validation Failed"),
     EVENT_SERIALIZATION_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "Internal Error"),

@@ -71,6 +71,16 @@ public class GlobalExceptionHandler {
         return buildResponse(ErrorType.VALIDATION_ERROR, detail, request);
     }
 
+    @ExceptionHandler(IllegalArgumentException.class)
+    public ResponseEntity<ApiError> handleIllegalArgument(
+            IllegalArgumentException ex,
+            HttpServletRequest request
+    ) {
+        String detail = "Invalid request format";
+        logError(ErrorType.VALIDATION_ERROR, detail, request, ex);
+        return buildResponse(ErrorType.VALIDATION_ERROR, detail, request);
+    }
+
     private ResponseEntity<ApiError> buildResponse(ErrorType errorType, String detail, HttpServletRequest request) {
         ApiError error = ApiErrorBuilder.build(errorType, detail, request);
         return ResponseEntity.status(errorType.getStatus()).body(error);
